@@ -13,7 +13,11 @@ const ncRoutes = require('./routes/nonConformances')
 const fieldMappingRoutes = require('./routes/fieldMappings')
 
 const app = express()
-app.use(cors())
+app.use(cors({
+  origin: '*',
+  methods: ['GET', 'POST', 'PUT', 'PATCH', 'DELETE'],
+  allowedHeaders: ['Content-Type', 'Authorization', 'ngrok-skip-browser-warning']
+}))
 app.use(express.json())
 
 app.get('/health', (req, res) => {
