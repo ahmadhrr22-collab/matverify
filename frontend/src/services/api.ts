@@ -1,6 +1,11 @@
 import axios from 'axios'
 
-const api = axios.create({ baseURL: 'https://umbilical-navy-irate.ngrok-free.dev/api' })
+const api = axios.create({
+  baseURL: 'https://umbilical-navy-irate.ngrok-free.dev/api',
+  headers: {
+    'ngrok-skip-browser-warning': 'true'
+  }
+})
 
 api.interceptors.request.use((config) => {
   const token = localStorage.getItem('token')
@@ -13,6 +18,7 @@ api.interceptors.response.use(
   (err) => {
     if (err.response?.status === 401) {
       localStorage.removeItem('token')
+      localStorage.removeItem('user')
       window.location.href = '/login'
     }
     return Promise.reject(err)
