@@ -1,5 +1,13 @@
 const express = require('express')
-const cors = require('cors')
+const cors = require('cors');
+
+app.use(cors({
+  origin: [
+    'http://localhost:5173',
+    'https://matverify-1oyb.vercel.app'
+  ],
+  credentials: true
+}));
 require('dotenv').config()
 
 const authRoutes = require('./routes/auth')
