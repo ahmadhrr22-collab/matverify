@@ -13,6 +13,7 @@ const ncRoutes = require('./routes/nonConformances')
 const fieldMappingRoutes = require('./routes/fieldMappings')
 
 const app = express()
+
 app.use(cors({
   origin: '*',
   methods: ['GET', 'POST', 'PUT', 'PATCH', 'DELETE'],
@@ -34,7 +35,7 @@ app.use('/api/tasks', taskRoutes)
 app.use('/api/non-conformances', ncRoutes)
 app.use('/api/field-mappings', fieldMappingRoutes)
 
-if (process.env.NODE_ENV !== 'production') {
+if (require.main === module) {
   const PORT = process.env.PORT || 3000
   app.listen(PORT, () => {
     console.log(`Server running on port ${PORT}`)
