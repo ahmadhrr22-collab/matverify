@@ -93,7 +93,7 @@ export default function VerificationDetail() {
           </div>
         </div>
         
-        {delivery.status === 'PENDING' || delivery.status === 'IN_PROGRESS' ? (
+        {(delivery.status === 'PENDING' || delivery.status === 'IN_PROGRESS') && tasks.some((t: any) => t.documents?.length > 0) ? (
           <div className="flex gap-3">
             <button
               onClick={() => handleComplete('reject')}
@@ -185,113 +185,117 @@ export default function VerificationDetail() {
             </div>
 
             {task.documents?.length > 0 && (
-              <div className="border-t border-gray-50 pt-4 mt-4 space-y-4">
-                <p className="text-xs font-medium text-gray-500">Hasil AI Analysis</p>
-                {task.documents.map((doc: any) => (
-                  <div key={doc.id} className="bg-gray-50 rounded-lg p-4">
-                    <div className="flex justify-between items-center mb-3">
-                      <div className="flex items-center gap-2">
-                        <span className="text-xs font-medium text-gray-700">{doc.docType}</span>
-                        <span className={`text-xs px-2 py-0.5 rounded-full font-medium ${
-                          doc.validationStatus === 'PASSED' ? 'bg-green-100 text-green-700' :
-                          doc.validationStatus === 'FAILED' ? 'bg-red-100 text-red-700' :
-                          doc.validationStatus === 'MANUAL_REVIEW' ? 'bg-amber-100 text-amber-700' :
-                          'bg-gray-100 text-gray-500'
-                        }`}>
-                          {doc.validationStatus}
-                        </span>
-                      </div>
-                      <div className="flex items-center gap-3">
-                        <span className="text-xs text-gray-400">Azure confidence: {Math.round((doc.confidence || 0) * 100)}%</span>
-                        {doc.validationDetail?.overallScore !== undefined && (
-                          <span className="text-xs font-medium text-blue-600">
-                            Gemini score: {doc.validationDetail.overallScore}%
-                          </span>
-                        )}
-                      </div>
-                    </div>
-
-                    {doc.validationDetail?.summary && (
-                      <div className="bg-white rounded-lg p-3 mb-3 border border-gray-100">
-                        <p className="text-xs text-gray-500 mb-1 font-medium">Ringkasan Gemini AI:</p>
-                        <p className="text-xs text-gray-700">{doc.validationDetail.summary}</p>
-                      </div>
-                    )}
-
-                    {doc.validationDetail?.results && (
-                      <div>
-                        <p className="text-xs font-medium text-gray-500 mb-2">Detail Validasi per Field:</p>
-                        <div className="space-y-2">
-                          {doc.validationDetail.results.map((r: any, idx: number) => (
-                            <div key={idx} className={`flex items-start gap-3 p-2 rounded-lg ${r.passed ? 'bg-green-50' : 'bg-red-50'}`}>
-                              <span className={`text-sm mt-0.5 flex-shrink-0 ${r.passed ? 'text-green-500' : 'text-red-500'}`}>
-                                {r.passed ? '✓' : '✗'}
-                              </span>
-                              <div className="flex-1 min-w-0">
-                                <div className="flex justify-between items-center">
-                                  <span className="text-xs font-medium text-gray-700">{r.specField}</span>
-                                  <span className="text-xs text-gray-400">
-                                    {Math.round((r.confidence || 0) * 100)}% confident
-                                  </span>
-                                </div>
-                                <p className="text-xs text-gray-500 mt-0.5">
-                                  Expect: <span className="font-medium">{r.expectedValue}</span> ·
-                                  Got: <span className={`font-medium ${r.passed ? 'text-green-700' : 'text-red-700'}`}>
-                                    {r.extractedValue || 'Not found'}
-                                  </span>
-                                  {r.extractedField && r.extractedField !== r.specField && (
-                                    <span className="text-gray-400"> (from "{r.extractedField}")</span>
-                                  )}
-                                </p>
-                                {r.reasoning && (
-                                  <p className="text-xs text-gray-400 mt-0.5 italic">{r.reasoning}</p>
-                                )}
-                              </div>
-                            </div>
-                          ))}
-                        </div>
-                      </div>
-                    )}
-
-                    {doc.extractedData && Object.keys(doc.extractedData).length > 0 && (
-                      <div className="mt-3 border-t border-gray-200 pt-3">
-                        <p className="text-xs font-medium text-gray-400 mb-2">Raw data dari Azure AI:</p>
-                        <div className="grid grid-cols-2 gap-1">
-                          {Object.entries(doc.extractedData).map(([k, v]) => (
-                            <div key={k} className="text-xs">
-                              <span className="text-gray-400">{k}: </span>
-                              <span className="text-gray-600">{String(v)}</span>
-                            </div>
-                          ))}
-                        </div>
-                      </div>
-                    )}
-                  </div>
-                ))}
-              </div>
-            )}
-
-            {task.nonConformances?.length > 0 && (
-              <div className="border-t border-red-100 pt-4 mt-4">
-                <p className="text-xs font-medium text-red-600 mb-2">Non-Conformances Auto-Generated</p>
-                {task.nonConformances.map((nc: any) => (
-                  <div key={nc.id} className="bg-red-50 border border-red-100 rounded-lg p-3">
-                    <div className="flex justify-between items-center">
-                      <span className="text-xs font-mono text-red-700">{nc.ncNumber}</span>
-                      <span className={`text-xs px-2 py-0.5 rounded-full ${
-                        nc.severity === 'CRITICAL' ? 'bg-red-200 text-red-800' : 'bg-amber-100 text-amber-700'
-                      }`}>
-                        {nc.severity}
-                      </span>
-                    </div>
-                    <p className="text-xs text-red-600 mt-1">{nc.description}</p>
-                  </div>
-                ))}
+  <div className="border-t border-gray-100 pt-4 mt-4 space-y-3">
+    <p className="text-xs font-semibold text-gray-400 uppercase tracking-wider">AI Verification Results</p>
+    {task.documents.map((doc: any) => (
+      <div key={doc.id} className="rounded-xl border border-gray-100 overflow-hidden">
+        <div className={`px-4 py-3 flex justify-between items-center ${
+          doc.validationStatus === 'PASSED' ? 'bg-green-50 border-b border-green-100' :
+          doc.validationStatus === 'FAILED' ? 'bg-red-50 border-b border-red-100' :
+          doc.validationStatus === 'MANUAL_REVIEW' ? 'bg-amber-50 border-b border-amber-100' :
+          'bg-gray-50 border-b border-gray-100'
+        }`}>
+          <div className="flex items-center gap-3">
+            <span className="text-xs font-semibold text-gray-600 tracking-wider">{doc.docType.replace('_', ' ')}</span>
+            <span className={`text-xs px-2 py-0.5 rounded-full font-medium ${
+              doc.validationStatus === 'PASSED' ? 'bg-green-100 text-green-700' :
+              doc.validationStatus === 'FAILED' ? 'bg-red-100 text-red-700' :
+              doc.validationStatus === 'MANUAL_REVIEW' ? 'bg-amber-100 text-amber-700' :
+              'bg-gray-100 text-gray-500'
+            }`}>
+              {doc.validationStatus === 'PASSED' ? 'Passed' :
+               doc.validationStatus === 'FAILED' ? 'Failed' :
+               doc.validationStatus === 'MANUAL_REVIEW' ? 'Manual Review' : 'Pending'}
+            </span>
+          </div>
+          <div className="flex items-center gap-4">
+            <div className="text-right">
+              <p className="text-xs text-gray-400">OCR Confidence</p>
+              <p className="text-xs font-semibold text-gray-600">{Math.round((doc.confidence || 0) * 100)}%</p>
+            </div>
+            {doc.validationDetail?.overallScore !== undefined && (
+              <div className="text-right">
+                <p className="text-xs text-gray-400">Validation Score</p>
+                <p className={`text-xs font-semibold ${
+                  doc.validationDetail.overallScore >= 80 ? 'text-green-600' :
+                  doc.validationDetail.overallScore >= 50 ? 'text-amber-600' : 'text-red-600'
+                }`}>{doc.validationDetail.overallScore}%</p>
               </div>
             )}
           </div>
-        ))}
+        </div>
+
+        {doc.validationDetail?.summary && (
+          <div className="px-4 py-3 bg-white border-b border-gray-50">
+            <p className="text-xs text-gray-500 font-medium mb-0.5">AI Summary</p>
+            <p className="text-sm text-gray-700">{doc.validationDetail.summary}</p>
+          </div>
+        )}
+
+        {doc.validationDetail?.results && (
+          <div className="px-4 py-3 bg-white">
+            <p className="text-xs text-gray-400 font-semibold uppercase tracking-wider mb-3">Field Validation</p>
+            <div className="space-y-2">
+              {doc.validationDetail.results.map((r: any, idx: number) => (
+                <div key={idx} className={`grid grid-cols-12 gap-2 items-start p-2.5 rounded-lg ${r.passed ? 'bg-green-50' : 'bg-red-50'}`}>
+                  <div className="col-span-1 pt-0.5">
+                    <div className={`w-5 h-5 rounded-full flex items-center justify-center flex-shrink-0 ${r.passed ? 'bg-green-500' : 'bg-red-500'}`}>
+                      <svg width="10" height="10" viewBox="0 0 10 10" fill="none">
+                        {r.passed ? (
+                          <path d="M2 5l2 2 4-4" stroke="white" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"/>
+                        ) : (
+                          <path d="M3 3l4 4M7 3l-4 4" stroke="white" strokeWidth="1.5" strokeLinecap="round"/>
+                        )}
+                      </svg>
+                    </div>
+                  </div>
+                  <div className="col-span-3">
+                    <p className="text-xs font-semibold text-gray-700">{r.specField}</p>
+                    {r.extractedField && r.extractedField !== r.specField && (
+                      <p className="text-xs text-gray-400 mt-0.5">from "{r.extractedField}"</p>
+                    )}
+                  </div>
+                  <div className="col-span-3">
+                    <p className="text-xs text-gray-400">Expected</p>
+                    <p className="text-xs font-medium text-gray-600">{r.expectedValue}</p>
+                  </div>
+                  <div className="col-span-3">
+                    <p className="text-xs text-gray-400">Extracted</p>
+                    <p className={`text-xs font-medium ${r.passed ? 'text-green-700' : 'text-red-600'}`}>
+                      {r.extractedValue || 'Not found'}
+                    </p>
+                  </div>
+                  <div className="col-span-2 text-right">
+                    <p className="text-xs text-gray-400">Confidence</p>
+                    <p className="text-xs font-medium text-gray-600">{Math.round((r.confidence || 0) * 100)}%</p>
+                  </div>
+                  {r.reasoning && (
+                    <div className="col-span-12 mt-1">
+                      <p className="text-xs text-gray-400 italic">{r.reasoning}</p>
+                    </div>
+                  )}
+                </div>
+              ))}
+            </div>
+          </div>
+        )}
+
+        {doc.extractedData && Object.keys(doc.extractedData).length > 0 && (
+          <details className="border-t border-gray-50">
+            <summary className="px-4 py-2.5 text-xs text-gray-400 cursor-pointer hover:bg-gray-50 select-none">
+              View raw extracted data ({Object.keys(doc.extractedData).length} fields)
+            </summary>
+            <div className="px-4 py-3 grid grid-cols-2 gap-x-6 gap-y-1.5 bg-gray-50">
+              {Object.entries(doc.extractedData).map(([k, v]) => (
+                <div key={k} className="flex gap-2 text-xs">
+                  <span className="text-gray-400 flex-shrink-0">{k}:</span>
+                  <span className="text-gray-600 font-medium">{String(v)}</span>
+                </div>
+              ))}
+            </div>
+          </details>
+        )}
       </div>
-    </Layout>
-  )
-}
+    ))}
+  </div>
+)}
