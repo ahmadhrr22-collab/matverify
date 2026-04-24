@@ -1,9 +1,9 @@
 import axios from 'axios'
 
-const api = axios.create({
-  baseURL: 'https://umbilical-navy-irate.ngrok-free.dev/api',
+const api = axios.create({ 
+  baseURL: 'https://matverify.vercel.app/api',
   headers: {
-    'ngrok-skip-browser-warning': 'true'
+    'Content-Type': 'application/json'
   }
 })
 
