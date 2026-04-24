@@ -17,7 +17,7 @@ export default function VerificationDetail() {
   const [tasks, setTasks] = useState<any[]>([])
   const [loading, setLoading] = useState(true)
   const [uploading, setUploading] = useState<string | null>(null)
-  const [completing, setCompleting] = useState(false) // Perbaikan: Menambahkan state yang hilang
+  const [completing, setCompleting] = useState(false)
 
   const fetchData = async () => {
     try {
@@ -34,27 +34,7 @@ export default function VerificationDetail() {
     }
   }
 
-  useEffect(() => { 
-    fetchData() 
-  }, [id])
-
-  const handleComplete = async (action: 'approve' | 'reject') => {
-    const msg = action === 'approve'
-      ? 'Approve delivery ini? Semua task akan ditandai APPROVED.'
-      : 'Reject delivery ini? Semua task akan ditandai REJECTED.'
-      
-    if (!confirm(msg)) return
-    
-    setCompleting(true)
-    try {
-      await api.patch(`/deliveries/${id}/complete`, { action })
-      fetchData()
-    } catch (e: any) {
-      alert(e.response?.data?.message || 'Gagal mengupdate status')
-    } finally { 
-      setCompleting(false) 
-    }
-  }
+  useEffect(() => { fetchData() }, [id])
 
   const handleUpload = async (taskId: string, file: File, docType: string) => {
     setUploading(taskId + docType)
@@ -62,66 +42,74 @@ export default function VerificationDetail() {
       const formData = new FormData()
       formData.append('file', file)
       formData.append('docType', docType)
-      
       const res = await api.post(`/documents/upload/${taskId}`, formData, {
         headers: { 'Content-Type': 'multipart/form-data' }
       })
-      
       const v = res.data.geminiValidation
       if (v) {
-        alert(`AI Analysis selesai!\nScore: ${v.overallScore}%\nStatus: ${v.status}\n${v.summary}`)
+        const score = v.overallScore ?? v.score ?? 'N/A'
+        const status = v.status ?? 'Unknown'
+        const summary = v.summary ?? ''
+        alert(`AI Analysis Complete\nScore: ${score}%\nStatus: ${status}\n${summary}`)
       }
       fetchData()
     } catch (e: any) {
-      alert('Upload gagal: ' + (e.response?.data?.message || e.message))
+      alert('Upload failed: ' + (e.response?.data?.message || e.message))
     } finally {
       setUploading(null)
     }
   }
 
-  if (loading) return <Layout><div className="text-center py-20 text-gray-400">Memuat...</div></Layout>
-  if (!delivery) return <Layout><div className="text-center py-20 text-gray-400">Delivery tidak ditemukan</div></Layout>
+  const handleComplete = async (action: 'approve' | 'reject') => {
+    const msg = action === 'approve'
+      ? 'Approve this delivery? All tasks will be marked as APPROVED.'
+      : 'Reject this delivery? All tasks will be marked as REJECTED.'
+    if (!confirm(msg)) return
+    setCompleting(true)
+    try {
+      await api.patch(`/deliveries/${id}/complete`, { action })
+      fetchData()
+    } catch (e: any) {
+      alert(e.response?.data?.message || 'Failed to update status')
+    } finally {
+      setCompleting(false)
+    }
+  }
+
+  const hasDocuments = tasks.some((t: any) => t.documents?.length > 0)
+  const isActionable = (delivery?.status === 'PENDING' || delivery?.status === 'IN_PROGRESS') && hasDocuments
+
+  if (loading) return <Layout><div className="text-center py-20 text-gray-400">Loading...</div></Layout>
+  if (!delivery) return <Layout><div className="text-center py-20 text-gray-400">Delivery not found</div></Layout>
 
   return (
     <Layout>
+      {/* Header — only status label, no buttons here */}
       <div className="mb-6 flex items-center justify-between">
         <div className="flex items-center gap-4">
-          <button onClick={() => navigate('/deliveries')} className="text-gray-400 hover:text-gray-600 text-sm">← Kembali</button>
+          <button onClick={() => navigate('/deliveries')} className="text-gray-400 hover:text-gray-600 text-sm">← Back</button>
           <div>
-            <h2 className="text-xl font-semibold text-gray-900">Verifikasi — {delivery.deliveryNo}</h2>
-            <p className="text-sm text-gray-500 mt-0.5">{delivery.purchaseOrder?.supplier?.supplierName} · {new Date(delivery.arrivalDate).toLocaleDateString('id-ID')}</p>
+            <h2 className="text-xl font-semibold text-gray-900">Verification — {delivery.deliveryNo}</h2>
+            <p className="text-sm text-gray-500 mt-0.5">
+              {delivery.purchaseOrder?.supplier?.supplierName} · {new Date(delivery.arrivalDate).toLocaleDateString('id-ID')}
+            </p>
           </div>
         </div>
-        
-        {(delivery.status === 'PENDING' || delivery.status === 'IN_PROGRESS') && tasks.some((t: any) => t.documents?.length > 0) ? (
-          <div className="flex gap-3">
-            <button
-              onClick={() => handleComplete('reject')}
-              disabled={completing}
-              className="px-4 py-2 text-sm border border-red-200 text-red-600 rounded-lg hover:bg-red-50 disabled:opacity-50"
-            >
-              Reject Delivery
-            </button>
-            <button
-              onClick={() => handleComplete('approve')}
-              disabled={completing}
-              className="px-4 py-2 text-sm bg-green-600 text-white rounded-lg hover:bg-green-700 disabled:opacity-50"
-            >
-              {completing ? 'Memproses...' : 'Approve & Complete'}
-            </button>
-          </div>
-        ) : (
+        {/* Only show final status label if already completed/rejected */}
+        {(delivery.status === 'COMPLETED' || delivery.status === 'REJECTED') && (
           <span className={`px-3 py-1.5 rounded-lg text-sm font-medium ${
             delivery.status === 'COMPLETED' ? 'bg-green-50 text-green-700' : 'bg-red-50 text-red-700'
           }`}>
-            {delivery.status === 'COMPLETED' ? 'Delivery Completed' : 'Delivery Rejected'}
+            {delivery.status === 'COMPLETED' ? '✓ Delivery Approved' : '✗ Delivery Rejected'}
           </span>
         )}
       </div>
 
       <div className="space-y-4">
         {tasks.length === 0 ? (
-          <div className="bg-white rounded-xl border border-gray-100 p-8 text-center text-gray-400 text-sm">Belum ada task verifikasi</div>
+          <div className="bg-white rounded-xl border border-gray-100 p-8 text-center text-gray-400 text-sm">
+            No verification tasks found
+          </div>
         ) : tasks.map(task => (
           <div key={task.id} className="bg-white rounded-xl border border-gray-100 p-5">
             <div className="flex justify-between items-start mb-4">
@@ -139,43 +127,36 @@ export default function VerificationDetail() {
             </div>
 
             <div className="border-t border-gray-50 pt-4">
-              <p className="text-xs font-medium text-gray-500 mb-3">Upload Dokumen untuk AI Analysis</p>
+              <p className="text-xs font-semibold text-gray-400 uppercase tracking-wider mb-3">Document Upload & AI Analysis</p>
               <div className="grid grid-cols-3 gap-3">
                 {['COA', 'LABEL', 'DELIVERY_NOTE'].map(docType => {
                   const existing = task.documents?.find((d: any) => d.docType === docType)
                   const isUploading = uploading === task.id + docType
-                  
                   return (
                     <div key={docType} className={`border rounded-lg p-3 ${existing ? 'border-green-200 bg-green-50' : 'border-gray-200 border-dashed'}`}>
-                      <p className="text-xs font-medium text-gray-600 mb-2">{docType.replace('_', ' ')}</p>
+                      <p className="text-xs font-semibold text-gray-500 mb-2 tracking-wider">{docType.replace('_', ' ')}</p>
                       {existing ? (
                         <div>
-                          <p className="text-xs text-green-700 font-medium">Terverifikasi</p>
-                          <p className="text-xs text-gray-500">Confidence: {Math.round((existing.confidence || 0) * 100)}%</p>
-                          <span className={`text-xs px-1.5 py-0.5 rounded-full ${
+                          <p className="text-xs text-green-700 font-medium">Verified</p>
+                          <p className="text-xs text-gray-500">OCR: {Math.round((existing.confidence || 0) * 100)}%</p>
+                          <span className={`text-xs px-1.5 py-0.5 rounded-full font-medium ${
                             existing.validationStatus === 'PASSED' ? 'bg-green-100 text-green-700' :
                             existing.validationStatus === 'FAILED' ? 'bg-red-100 text-red-700' :
                             existing.validationStatus === 'MANUAL_REVIEW' ? 'bg-amber-100 text-amber-700' :
                             'bg-gray-100 text-gray-500'
-                          }`}>
-                            {existing.validationStatus}
-                          </span>
+                          }`}>{existing.validationStatus}</span>
                         </div>
                       ) : (
                         <label className="cursor-pointer">
                           <span className="text-xs text-blue-600 hover:underline">
-                            {isUploading ? 'Menganalisis AI...' : '+ Upload & Analisis AI'}
+                            {isUploading ? 'Analyzing...' : '+ Upload & AI Analysis'}
                           </span>
-                          <input 
-                            type="file" 
-                            className="hidden" 
-                            accept=".pdf,.jpg,.jpeg,.png"
+                          <input type="file" className="hidden" accept=".pdf,.jpg,.jpeg,.png"
                             disabled={!!uploading}
                             onChange={e => {
                               const file = e.target.files?.[0]
                               if (file) handleUpload(task.id, file, docType)
-                            }} 
-                          />
+                            }} />
                         </label>
                       )}
                     </div>
@@ -299,9 +280,46 @@ export default function VerificationDetail() {
                 ))}
               </div>
             )}
+
+            {task.nonConformances?.length > 0 && (
+              <div className="border-t border-red-100 pt-4 mt-4">
+                <p className="text-xs font-semibold text-red-500 uppercase tracking-wider mb-2">Non-Conformances</p>
+                {task.nonConformances.map((nc: any) => (
+                  <div key={nc.id} className="bg-red-50 border border-red-100 rounded-lg p-3 mb-2">
+                    <div className="flex justify-between items-center">
+                      <span className="text-xs font-mono text-red-700 font-medium">{nc.ncNumber}</span>
+                      <span className={`text-xs px-2 py-0.5 rounded-full font-medium ${
+                        nc.severity === 'CRITICAL' ? 'bg-red-200 text-red-800' : 'bg-amber-100 text-amber-700'
+                      }`}>{nc.severity}</span>
+                    </div>
+                    <p className="text-xs text-red-600 mt-1">{nc.description}</p>
+                  </div>
+                ))}
+              </div>
+            )}
           </div>
         ))}
       </div>
+
+      {/* Approve/Reject buttons — bottom right, only shown after documents uploaded */}
+      {isActionable && (
+        <div className="fixed bottom-6 right-6 flex gap-3 z-50">
+          <button
+            onClick={() => handleComplete('reject')}
+            disabled={completing}
+            className="px-5 py-2.5 text-sm font-medium bg-red-600 text-white rounded-lg hover:bg-red-700 disabled:opacity-50 shadow-lg"
+          >
+            Reject Delivery
+          </button>
+          <button
+            onClick={() => handleComplete('approve')}
+            disabled={completing}
+            className="px-5 py-2.5 text-sm font-medium bg-green-600 text-white rounded-lg hover:bg-green-700 disabled:opacity-50 shadow-lg"
+          >
+            {completing ? 'Processing...' : 'Approve & Complete'}
+          </button>
+        </div>
+      )}
     </Layout>
   )
 }
