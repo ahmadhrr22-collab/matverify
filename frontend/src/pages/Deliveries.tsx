@@ -132,7 +132,7 @@ export default function Deliveries() {
                 <input
                   required
                   value={form.deliveryNo}
-                  onChange={e => setForm({...form, deliveryNo: e.target.value})}
+                  onChange={e => setForm({ ...form, deliveryNo: e.target.value })}
                   className="w-full border border-gray-200 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
                   placeholder="DEL-2026-001"
                 />
@@ -142,7 +142,7 @@ export default function Deliveries() {
                 <select
                   required
                   value={form.supplierId}
-                  onChange={e => setForm({...form, supplierId: e.target.value})}
+                  onChange={e => setForm({ ...form, supplierId: e.target.value })}
                   className="w-full border border-gray-200 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
                 >
                   <option value="">Pilih supplier</option>
@@ -156,7 +156,7 @@ export default function Deliveries() {
                 <input
                   required
                   value={form.poNumber}
-                  onChange={e => setForm({...form, poNumber: e.target.value})}
+                  onChange={e => setForm({ ...form, poNumber: e.target.value })}
                   className="w-full border border-gray-200 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
                   placeholder="PO-2026-001"
                 />
@@ -167,7 +167,7 @@ export default function Deliveries() {
                   type="date"
                   required
                   value={form.poDate}
-                  onChange={e => setForm({...form, poDate: e.target.value})}
+                  onChange={e => setForm({ ...form, poDate: e.target.value })}
                   className="w-full border border-gray-200 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
                 />
               </div>
@@ -177,7 +177,7 @@ export default function Deliveries() {
                   type="date"
                   required
                   value={form.arrivalDate}
-                  onChange={e => setForm({...form, arrivalDate: e.target.value})}
+                  onChange={e => setForm({ ...form, arrivalDate: e.target.value })}
                   className="w-full border border-gray-200 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
                 />
               </div>
@@ -185,7 +185,7 @@ export default function Deliveries() {
                 <label className="block text-xs text-gray-500 mb-1">Catatan</label>
                 <input
                   value={form.notes}
-                  onChange={e => setForm({...form, notes: e.target.value})}
+                  onChange={e => setForm({ ...form, notes: e.target.value })}
                   className="w-full border border-gray-200 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
                   placeholder="Opsional"
                 />
@@ -321,16 +321,16 @@ export default function Deliveries() {
                   </span>
                 </td>
                 <td className="px-4 py-3">
-                  <div className="flex gap-3">
+                  <div className="flex gap-2">
                     <button
                       onClick={() => navigate(`/deliveries/${d.id}`)}
-                      className="text-xs text-blue-600 hover:underline"
+                      className="text-xs px-3 py-1.5 rounded-lg border border-blue-200 text-blue-600 hover:bg-blue-50 font-medium transition-colors"
                     >
                       Verifikasi →
                     </button>
                     <button
                       onClick={() => handleDelete(d.id, d.deliveryNo)}
-                      className="text-xs text-red-500 hover:underline"
+                      className="text-xs px-3 py-1.5 rounded-lg border border-red-200 text-red-500 hover:bg-red-50 font-medium transition-colors"
                     >
                       Hapus
                     </button>

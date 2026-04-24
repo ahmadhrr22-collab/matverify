@@ -33,7 +33,13 @@ export default function Materials() {
 
   const resetForm = () => {
     setEditingId(null)
-    setForm({ materialCode: '', name: '', category: '', unit: '', qualitySpecs: '{"purity":"min 99%","moisture":"max 0.5%","heavy_metals":"max 10ppm"}' })
+    setForm({ 
+      materialCode: '', 
+      name: '', 
+      category: '', 
+      unit: '', 
+      qualitySpecs: '{"purity":"min 99%","moisture":"max 0.5%","heavy_metals":"max 10ppm"}' 
+    })
     setShowForm(false)
   }
 
@@ -82,31 +88,31 @@ export default function Materials() {
           <form onSubmit={handleSubmit} className="grid grid-cols-2 gap-4">
             <div>
               <label className="block text-xs text-gray-500 mb-1">Kode Material</label>
-              <input required value={form.materialCode} onChange={e => setForm({...form, materialCode: e.target.value})}
+              <input required value={form.materialCode} onChange={e => setForm({ ...form, materialCode: e.target.value })}
                 className="w-full border border-gray-200 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
                 placeholder="MAT-001" disabled={!!editingId} />
             </div>
             <div>
               <label className="block text-xs text-gray-500 mb-1">Nama Material</label>
-              <input required value={form.name} onChange={e => setForm({...form, name: e.target.value})}
+              <input required value={form.name} onChange={e => setForm({ ...form, name: e.target.value })}
                 className="w-full border border-gray-200 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
                 placeholder="Paracetamol API" />
             </div>
             <div>
               <label className="block text-xs text-gray-500 mb-1">Kategori</label>
-              <input required value={form.category} onChange={e => setForm({...form, category: e.target.value})}
+              <input required value={form.category} onChange={e => setForm({ ...form, category: e.target.value })}
                 className="w-full border border-gray-200 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
                 placeholder="Active Pharmaceutical Ingredient" />
             </div>
             <div>
               <label className="block text-xs text-gray-500 mb-1">Unit</label>
-              <input required value={form.unit} onChange={e => setForm({...form, unit: e.target.value})}
+              <input required value={form.unit} onChange={e => setForm({ ...form, unit: e.target.value })}
                 className="w-full border border-gray-200 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
                 placeholder="kg" />
             </div>
             <div className="col-span-2">
               <label className="block text-xs text-gray-500 mb-1">Quality Specs (JSON)</label>
-              <textarea rows={3} value={form.qualitySpecs} onChange={e => setForm({...form, qualitySpecs: e.target.value})}
+              <textarea rows={3} value={form.qualitySpecs} onChange={e => setForm({ ...form, qualitySpecs: e.target.value })}
                 className="w-full border border-gray-200 rounded-lg px-3 py-2 text-sm font-mono focus:outline-none focus:ring-2 focus:ring-blue-500" />
               <p className="text-xs text-gray-400 mt-1">Specs ini akan dipakai AI untuk validasi CoA</p>
             </div>
@@ -146,8 +152,12 @@ export default function Materials() {
                 <td className="px-4 py-3 text-gray-400 text-xs font-mono">{JSON.stringify(m.qualitySpecs).slice(0, 40)}...</td>
                 <td className="px-4 py-3">
                   <div className="flex gap-2">
-                    <button onClick={() => openEdit(m)} className="text-xs text-blue-600 hover:underline">Edit</button>
-                    <button onClick={() => handleDelete(m.id, m.name)} className="text-xs text-red-500 hover:underline">Hapus</button>
+                    <button onClick={() => openEdit(m)} className="text-xs px-3 py-1.5 rounded-lg border border-gray-200 text-gray-600 hover:bg-gray-50 font-medium transition-colors">
+                      Edit
+                    </button>
+                    <button onClick={() => handleDelete(m.id, m.name)} className="text-xs px-3 py-1.5 rounded-lg border border-red-200 text-red-500 hover:bg-red-50 font-medium transition-colors">
+                      Hapus
+                    </button>
                   </div>
                 </td>
               </tr>

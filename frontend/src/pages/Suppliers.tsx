@@ -20,7 +20,14 @@ export default function Suppliers() {
 
   const openEdit = (s: any) => {
     setEditingId(s.id)
-    setForm({ supplierCode: s.supplierCode, supplierName: s.supplierName, certNumber: s.certNumber || '', email: s.email || '', phone: s.phone || '', status: s.status })
+    setForm({ 
+      supplierCode: s.supplierCode, 
+      supplierName: s.supplierName, 
+      certNumber: s.certNumber || '', 
+      email: s.email || '', 
+      phone: s.phone || '', 
+      status: s.status 
+    })
     setShowForm(true)
   }
 
@@ -74,37 +81,37 @@ export default function Suppliers() {
           <form onSubmit={handleSubmit} className="grid grid-cols-2 gap-4">
             <div>
               <label className="block text-xs text-gray-500 mb-1">Kode Supplier</label>
-              <input required value={form.supplierCode} onChange={e => setForm({...form, supplierCode: e.target.value})}
+              <input required value={form.supplierCode} onChange={e => setForm({ ...form, supplierCode: e.target.value })}
                 className="w-full border border-gray-200 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
                 placeholder="SUP-001" disabled={!!editingId} />
             </div>
             <div>
               <label className="block text-xs text-gray-500 mb-1">Nama Supplier</label>
-              <input required value={form.supplierName} onChange={e => setForm({...form, supplierName: e.target.value})}
+              <input required value={form.supplierName} onChange={e => setForm({ ...form, supplierName: e.target.value })}
                 className="w-full border border-gray-200 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
                 placeholder="PT Kimia Farma" />
             </div>
             <div>
               <label className="block text-xs text-gray-500 mb-1">No. Sertifikat</label>
-              <input value={form.certNumber} onChange={e => setForm({...form, certNumber: e.target.value})}
+              <input value={form.certNumber} onChange={e => setForm({ ...form, certNumber: e.target.value })}
                 className="w-full border border-gray-200 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
                 placeholder="CERT-2026-001" />
             </div>
             <div>
               <label className="block text-xs text-gray-500 mb-1">Email</label>
-              <input type="email" value={form.email} onChange={e => setForm({...form, email: e.target.value})}
+              <input type="email" value={form.email} onChange={e => setForm({ ...form, email: e.target.value })}
                 className="w-full border border-gray-200 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
                 placeholder="supplier@email.com" />
             </div>
             <div>
               <label className="block text-xs text-gray-500 mb-1">Phone</label>
-              <input value={form.phone} onChange={e => setForm({...form, phone: e.target.value})}
+              <input value={form.phone} onChange={e => setForm({ ...form, phone: e.target.value })}
                 className="w-full border border-gray-200 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
                 placeholder="021-1234567" />
             </div>
             <div>
               <label className="block text-xs text-gray-500 mb-1">Status</label>
-              <select value={form.status} onChange={e => setForm({...form, status: e.target.value})}
+              <select value={form.status} onChange={e => setForm({ ...form, status: e.target.value })}
                 className="w-full border border-gray-200 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500">
                 <option value="ACTIVE">Active</option>
                 <option value="INACTIVE">Inactive</option>
@@ -151,8 +158,12 @@ export default function Suppliers() {
                 </td>
                 <td className="px-4 py-3">
                   <div className="flex gap-2">
-                    <button onClick={() => openEdit(s)} className="text-xs text-blue-600 hover:underline">Edit</button>
-                    <button onClick={() => handleDelete(s.id, s.supplierName)} className="text-xs text-red-500 hover:underline">Hapus</button>
+                    <button onClick={() => openEdit(s)} className="text-xs px-3 py-1.5 rounded-lg border border-gray-200 text-gray-600 hover:bg-gray-50 font-medium transition-colors">
+                      Edit
+                    </button>
+                    <button onClick={() => handleDelete(s.id, s.supplierName)} className="text-xs px-3 py-1.5 rounded-lg border border-red-200 text-red-500 hover:bg-red-50 font-medium transition-colors">
+                      Hapus
+                    </button>
                   </div>
                 </td>
               </tr>
