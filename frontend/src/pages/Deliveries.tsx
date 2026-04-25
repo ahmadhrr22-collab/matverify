@@ -90,12 +90,11 @@ export default function Deliveries() {
         await api.post('/tasks', { deliveryItemId: item.id, priority: 'MEDIUM' })
       }
       
-      toast.success('Delivery & Tasks berhasil dibuat') // Toast success sesuai instruksi
+      toast.success('Delivery & Tasks berhasil dibuat') // Toast success
       resetForm()
       fetchAll()
     } catch (e: any) {
-      // Ganti alert dengan toast.error
-      toast.error('Gagal menyimpan delivery', e.response?.data?.message || e.message)
+      toast.error('Gagal menyimpan delivery', e.response?.data?.message || e.message) // Toast error
     } finally {
       setSaving(false)
     }
@@ -105,11 +104,10 @@ export default function Deliveries() {
     if (!confirm(`Hapus delivery "${deliveryNo}" beserta semua data verifikasinya?`)) return
     try {
       await api.delete(`/deliveries/${id}`)
-      toast.success('Delivery berhasil dihapus') // Toast success hapus
+      toast.success('Delivery berhasil dihapus') // Toast success
       fetchAll()
     } catch (e: any) {
-      // Ganti alert dengan toast.error
-      toast.error('Gagal menghapus', e.response?.data?.message || 'Terjadi kesalahan')
+      toast.error('Gagal menghapus', e.response?.data?.message || 'Terjadi kesalahan') // Toast error
     }
   }
 
@@ -298,10 +296,10 @@ export default function Deliveries() {
         </div>
       )}
 
-      <div className="bg-white rounded-xl border border-gray-100">
+      <div className="bg-white rounded-xl border border-gray-100 overflow-hidden">
         <table className="w-full text-sm">
           <thead>
-            <tr className="border-b border-gray-100">
+            <tr className="border-b border-gray-100 bg-gray-50/50">
               <th className="text-left px-4 py-3 text-gray-500 font-medium">No. Delivery</th>
               <th className="text-left px-4 py-3 text-gray-500 font-medium">Supplier</th>
               <th className="text-left px-4 py-3 text-gray-500 font-medium">Tanggal</th>
@@ -330,13 +328,13 @@ export default function Deliveries() {
                   <div className="flex gap-2">
                     <button
                       onClick={() => navigate(`/deliveries/${d.id}`)}
-                      className="text-xs px-3 py-1.5 rounded-lg border border-blue-200 text-blue-600 hover:bg-blue-50 font-medium transition-colors"
+                      className="text-xs px-3 py-1.5 rounded-lg bg-blue-600 text-white hover:bg-blue-700 font-medium transition-colors"
                     >
-                      Verifikasi →
+                      Verifikasi
                     </button>
                     <button
                       onClick={() => handleDelete(d.id, d.deliveryNo)}
-                      className="text-xs px-3 py-1.5 rounded-lg border border-red-200 text-red-500 hover:bg-red-50 font-medium transition-colors"
+                      className="text-xs px-3 py-1.5 rounded-lg bg-red-600 text-white hover:bg-red-700 font-medium transition-colors"
                     >
                       Hapus
                     </button>

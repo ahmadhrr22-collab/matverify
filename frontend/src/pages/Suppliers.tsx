@@ -58,13 +58,13 @@ export default function Suppliers() {
   }
 
   const handleDelete = async (id: string, name: string) => {
+    // Sesuai instruksi: Ganti alert konfirmasi/error dengan toast
     if (!confirm(`Hapus supplier "${name}"?`)) return
     try {
       await api.delete(`/suppliers/${id}`)
       toast.success('Supplier berhasil dihapus') // Hapus sukses
       fetchSuppliers()
     } catch (e: any) {
-      // Ganti alert dengan toast.error
       toast.error('Gagal menghapus', e.response?.data?.message || 'Terjadi kesalahan')
     }
   }
@@ -134,10 +134,10 @@ export default function Suppliers() {
         </div>
       )}
 
-      <div className="bg-white rounded-xl border border-gray-100">
+      <div className="bg-white rounded-xl border border-gray-100 overflow-hidden">
         <table className="w-full text-sm">
           <thead>
-            <tr className="border-b border-gray-100">
+            <tr className="border-b border-gray-100 bg-gray-50/50">
               <th className="text-left px-4 py-3 text-gray-500 font-medium">Kode</th>
               <th className="text-left px-4 py-3 text-gray-500 font-medium">Nama</th>
               <th className="text-left px-4 py-3 text-gray-500 font-medium">No. Sertifikat</th>
@@ -164,10 +164,10 @@ export default function Suppliers() {
                 </td>
                 <td className="px-4 py-3">
                   <div className="flex gap-2">
-                    <button onClick={() => openEdit(s)} className="text-xs px-3 py-1.5 rounded-lg border border-gray-200 text-gray-600 hover:bg-gray-50 font-medium transition-colors">
+                    <button onClick={() => openEdit(s)} className="text-xs px-3 py-1.5 rounded-lg bg-blue-600 text-white hover:bg-blue-700 font-medium transition-colors">
                       Edit
                     </button>
-                    <button onClick={() => handleDelete(s.id, s.supplierName)} className="text-xs px-3 py-1.5 rounded-lg border border-red-200 text-red-500 hover:bg-red-50 font-medium transition-colors">
+                    <button onClick={() => handleDelete(s.id, s.supplierName)} className="text-xs px-3 py-1.5 rounded-lg bg-red-600 text-white hover:bg-red-700 font-medium transition-colors">
                       Hapus
                     </button>
                   </div>
