@@ -20,7 +20,6 @@ export default function Suppliers() {
   const [deleteTarget, setDeleteTarget] = useState<{ id: string; label: string } | null>(null)
 
   const fetchSuppliers = () => {
-    // 1. Cek data di cache
     const cached = cache.get('suppliers-page')
     if (cached) {
       setSuppliers(cached)
@@ -28,7 +27,6 @@ export default function Suppliers() {
       return
     }
 
-    // 2. Jika tidak ada cache, fetch dari API
     api.get('/suppliers')
       .then(r => {
         cache.set('suppliers-page', r.data)
@@ -71,7 +69,6 @@ export default function Suppliers() {
         toast.success('Supplier berhasil disimpan')
       }
 
-      // Invalidate cache setiap kali ada perubahan data
       cache.clear('suppliers-page')
       cache.clear('dashboard')
       cache.clear('deliveries-page')
@@ -83,13 +80,11 @@ export default function Suppliers() {
     } finally { setSaving(false) }
   }
 
-  // Fungsi handleDelete yang diperbarui menggunakan modal kustom
   const handleDelete = async () => {
     if (!deleteTarget) return
     try {
       await api.delete(`/suppliers/${deleteTarget.id}`)
       
-      // Invalidate cache
       cache.clear('suppliers-page')
       cache.clear('dashboard')
       cache.clear('deliveries-page')
@@ -197,12 +192,27 @@ export default function Suppliers() {
                   </span>
                 </td>
                 <td className="px-4 py-3">
-                  <div className="flex gap-2">
-                    <button onClick={() => openEdit(s)} className="text-xs px-3 py-1.5 rounded-lg bg-blue-600 text-white hover:bg-blue-700 font-medium transition-colors">
-                      Edit
+                  <div className="flex gap-1">
+                    {/* Tombol Edit (Ikon Pensil) */}
+                    <button 
+                      onClick={() => openEdit(s)} 
+                      title="Edit Supplier"
+                      className="p-1.5 rounded-lg text-blue-600 hover:bg-blue-50 transition-colors"
+                    >
+                      <svg width="18" height="18" viewBox="0 0 20 20" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                        <path d="M11 4H4a2 2 0 0 0-2 2v11a2 2 0 0 0 2 2h11a2 2 0 0 0 2-2v-7" />
+                        <path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z" />
+                      </svg>
                     </button>
-                    <button onClick={() => setDeleteTarget({ id: s.id, label: s.supplierName })} className="text-xs px-3 py-1.5 rounded-lg bg-red-600 text-white hover:bg-red-700 font-medium transition-colors">
-                      Hapus
+                    {/* Tombol Hapus (Ikon Sampah) */}
+                    <button 
+                      onClick={() => setDeleteTarget({ id: s.id, label: s.supplierName })} 
+                      title="Hapus Supplier"
+                      className="p-1.5 rounded-lg text-red-400 hover:text-red-600 hover:bg-red-50 transition-colors"
+                    >
+                      <svg width="18" height="18" viewBox="0 0 20 20" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                        <path d="M3 6h14M8 6V4a2 2 0 0 1 2-2h0a2 2 0 0 1 2 2v2M15 6v12a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6" />
+                      </svg>
                     </button>
                   </div>
                 </td>
