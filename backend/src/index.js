@@ -20,7 +20,7 @@ const app = express();
 app.use(cors({
   origin: [
     'http://localhost:5173',
-    'https://matverify-1oyb.vercel.app' // URL Frontend Vercel kamu
+    'https://matverify.vercel.app' // URL Frontend Vercel kamu
   ],
   methods: ['GET', 'POST', 'PUT', 'PATCH', 'DELETE'],
   allowedHeaders: ['Content-Type', 'Authorization', 'ngrok-skip-browser-warning'],
