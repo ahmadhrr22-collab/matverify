@@ -2,7 +2,9 @@ import { useEffect, useState } from 'react'
 import { useNavigate } from 'react-router-dom'
 import Layout from '../components/Layout'
 import api from '../services/api'
-import { toast } from '../components/Toast' // Import toast
+import { toast } from '../components/Toast'
+import { cache } from '../services/cache' // Import cache
+import { SkeletonRow } from '../components/Skeleton' // Import Skeleton
 
 const statusColor: Record<string, string> = {
   PENDING: 'bg-amber-50 text-amber-700',
@@ -28,13 +30,28 @@ export default function Deliveries() {
   ])
 
   const fetchAll = async () => {
+    // 1. Cek data di cache
+    const cached = cache.get('deliveries-page')
+    if (cached) {
+      setDeliveries(cached.deliveries)
+      setSuppliers(cached.suppliers)
+      setMaterials(cached.materials)
+      setLoading(false)
+      return
+    }
+
     try {
       const [d, s, m] = await Promise.all([
         api.get('/deliveries'), api.get('/suppliers'), api.get('/materials')
       ])
-      setDeliveries(d.data)
-      setSuppliers(s.data)
-      setMaterials(m.data)
+      
+      const data = { deliveries: d.data, suppliers: s.data, materials: m.data }
+      // 2. Simpan ke cache
+      cache.set('deliveries-page', data)
+      
+      setDeliveries(data.deliveries)
+      setSuppliers(data.suppliers)
+      setMaterials(data.materials)
     } catch (e) {
       console.error(e)
     } finally {
@@ -90,11 +107,15 @@ export default function Deliveries() {
         await api.post('/tasks', { deliveryItemId: item.id, priority: 'MEDIUM' })
       }
       
-      toast.success('Delivery & Tasks berhasil dibuat') // Toast success
+      // 3. Invalidate cache agar data terbaru muncul
+      cache.clear('deliveries-page')
+      cache.clear('dashboard')
+      
+      toast.success('Delivery & Tasks berhasil dibuat')
       resetForm()
       fetchAll()
     } catch (e: any) {
-      toast.error('Gagal menyimpan delivery', e.response?.data?.message || e.message) // Toast error
+      toast.error('Gagal menyimpan delivery', e.response?.data?.message || e.message)
     } finally {
       setSaving(false)
     }
@@ -104,10 +125,15 @@ export default function Deliveries() {
     if (!confirm(`Hapus delivery "${deliveryNo}" beserta semua data verifikasinya?`)) return
     try {
       await api.delete(`/deliveries/${id}`)
-      toast.success('Delivery berhasil dihapus') // Toast success
+      
+      // Invalidate cache
+      cache.clear('deliveries-page')
+      cache.clear('dashboard')
+
+      toast.success('Delivery berhasil dihapus')
       fetchAll()
     } catch (e: any) {
-      toast.error('Gagal menghapus', e.response?.data?.message || 'Terjadi kesalahan') // Toast error
+      toast.error('Gagal menghapus', e.response?.data?.message || 'Terjadi kesalahan')
     }
   }
 
@@ -310,7 +336,8 @@ export default function Deliveries() {
           </thead>
           <tbody>
             {loading ? (
-              <tr><td colSpan={6} className="text-center py-8 text-gray-400">Memuat...</td></tr>
+              // Menggunakan SkeletonRow sesuai instruksi
+              Array.from({ length: 5 }).map((_, i) => <SkeletonRow key={i} cols={6} />)
             ) : deliveries.length === 0 ? (
               <tr><td colSpan={6} className="text-center py-8 text-gray-400">Belum ada delivery</td></tr>
             ) : deliveries.map(d => (

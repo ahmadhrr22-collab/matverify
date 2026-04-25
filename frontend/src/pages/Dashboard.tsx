@@ -3,6 +3,8 @@ import { useNavigate } from 'react-router-dom'
 import Layout from '../components/Layout'
 import api from '../services/api'
 import { useAuthStore } from '../stores/authStore'
+import { cache } from '../services/cache' // Import cache
+import { SkeletonCard, SkeletonList } from '../components/Skeleton' // Import Skeleton
 
 export default function Dashboard() {
   const [deliveries, setDeliveries] = useState<any[]>([])
@@ -14,16 +16,39 @@ export default function Dashboard() {
   const navigate = useNavigate()
 
   useEffect(() => {
+    // 1. Cek data di cache terlebih dahulu
+    const cached = cache.get('dashboard')
+    if (cached) {
+      setDeliveries(cached.deliveries)
+      setNcs(cached.ncs)
+      setSuppliers(cached.suppliers)
+      setMaterials(cached.materials)
+      setLoading(false)
+      return
+    }
+
+    // 2. Jika tidak ada cache, lakukan fetch API
     Promise.all([
       api.get('/deliveries'),
       api.get('/non-conformances'),
       api.get('/suppliers'),
       api.get('/materials'),
     ]).then(([d, n, s, m]) => {
-      setDeliveries(d.data)
-      setNcs(n.data)
-      setSuppliers(s.data)
-      setMaterials(m.data)
+      const data = { 
+        deliveries: d.data, 
+        ncs: n.data, 
+        suppliers: s.data, 
+        materials: m.data 
+      }
+      // Simpan data ke cache untuk penggunaan berikutnya
+      cache.set('dashboard', data)
+      
+      setDeliveries(data.deliveries)
+      setNcs(data.ncs)
+      setSuppliers(data.suppliers)
+      setMaterials(data.materials)
+    }).catch(err => {
+      console.error("Dashboard fetch error:", err)
     }).finally(() => setLoading(false))
   }, [])
 
@@ -80,8 +105,7 @@ export default function Dashboard() {
       icon: (
         <svg width="20" height="20" viewBox="0 0 20 20" fill="none">
           <path d="M3 17V8l7-5 7 5v9" stroke="currentColor" strokeWidth="1.3" strokeLinejoin="round" fill="none"/>
-          <rect x="7" y="11" width="3" height="6" rx="0.5" stroke="currentColor" strokeWidth="1.3" fill="none"/>
-          <rect x="11" y="11" width="3" height="4" rx="0.5" stroke="currentColor" strokeWidth="1.3" fill="none"/>
+          <path d="M7 11h3v6H7v-6zM11 11h3v4h-3v-4z" stroke="currentColor" strokeWidth="1.3" fill="none"/>
         </svg>
       )
     },
@@ -133,9 +157,16 @@ export default function Dashboard() {
           </p>
         </div>
 
-        {/* Stats */}
+        {/* Stats Cards dengan Skeleton Loading */}
         <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(200px, 1fr))', gap: 14, marginBottom: 24 }}>
-          {stats.map(s => (
+          {loading ? (
+            <>
+              <SkeletonCard />
+              <SkeletonCard />
+              <SkeletonCard />
+              <SkeletonCard />
+            </>
+          ) : stats.map(s => (
             <div key={s.label} style={{
               background: 'white',
               border: '1px solid #f0f0ef',
@@ -151,7 +182,7 @@ export default function Dashboard() {
               <div>
                 <p style={{ margin: '0 0 2px', fontSize: 12, color: '#888' }}>{s.label}</p>
                 <p style={{ margin: '0 0 2px', fontSize: 26, fontWeight: 700, color: s.color, lineHeight: 1 }}>
-                  {loading ? '—' : s.value}
+                  {s.value}
                 </p>
                 <p style={{ margin: 0, fontSize: 11, color: '#aaa' }}>{s.sub}</p>
               </div>
@@ -159,10 +190,10 @@ export default function Dashboard() {
           ))}
         </div>
 
-        {/* Two columns */}
+        {/* Two columns List Panel */}
         <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 14, marginBottom: 14 }}>
 
-          {/* Pending deliveries */}
+          {/* Pending deliveries dengan SkeletonList */}
           <div style={{ background: 'white', border: '1px solid #f0f0ef', borderRadius: 14, overflow: 'hidden' }}>
             <div style={{ padding: '16px 20px 12px', borderBottom: '1px solid #f7f7f6', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
               <p style={{ margin: 0, fontSize: 13, fontWeight: 600, color: '#111' }}>Perlu Verifikasi</p>
@@ -172,7 +203,7 @@ export default function Dashboard() {
             </div>
             <div style={{ padding: '8px 0' }}>
               {loading ? (
-                <p style={{ textAlign: 'center', padding: '24px 0', fontSize: 13, color: '#ccc' }}>Memuat...</p>
+                <SkeletonList rows={4} />
               ) : pending.length === 0 ? (
                 <div style={{ textAlign: 'center', padding: '28px 20px' }}>
                   <div style={{ fontSize: 28, marginBottom: 6 }}>✓</div>
@@ -196,7 +227,7 @@ export default function Dashboard() {
             </div>
           </div>
 
-          {/* Open NC */}
+          {/* Open NC dengan SkeletonList */}
           <div style={{ background: 'white', border: '1px solid #f0f0ef', borderRadius: 14, overflow: 'hidden' }}>
             <div style={{ padding: '16px 20px 12px', borderBottom: '1px solid #f7f7f6', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
               <p style={{ margin: 0, fontSize: 13, fontWeight: 600, color: '#111' }}>Non-Conformances Terbuka</p>
@@ -206,7 +237,7 @@ export default function Dashboard() {
             </div>
             <div style={{ padding: '8px 0' }}>
               {loading ? (
-                <p style={{ textAlign: 'center', padding: '24px 0', fontSize: 13, color: '#ccc' }}>Memuat...</p>
+                <SkeletonList rows={4} />
               ) : recentNC.length === 0 ? (
                 <div style={{ textAlign: 'center', padding: '28px 20px' }}>
                   <div style={{ fontSize: 28, marginBottom: 6 }}>✓</div>
@@ -233,7 +264,7 @@ export default function Dashboard() {
           </div>
         </div>
 
-        {/* Bottom banner — only if pending > 0 */}
+        {/* Bottom banner — hanya jika ada pending */}
         {!loading && pending.length > 0 && (
           <div style={{
             background: 'linear-gradient(135deg, #1a56db, #2563eb)',

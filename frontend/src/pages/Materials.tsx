@@ -1,7 +1,9 @@
 import { useEffect, useState } from 'react'
 import Layout from '../components/Layout'
 import api from '../services/api'
-import { toast } from '../components/Toast' // Import toast
+import { toast } from '../components/Toast'
+import { cache } from '../services/cache' // Import cache
+import { SkeletonRow } from '../components/Skeleton' // Import Skeleton
 
 export default function Materials() {
   const [materials, setMaterials] = useState<any[]>([])
@@ -15,7 +17,22 @@ export default function Materials() {
   })
 
   const fetchMaterials = () => {
-    api.get('/materials').then(r => setMaterials(r.data)).finally(() => setLoading(false))
+    // 1. Cek data di cache untuk halaman materials
+    const cached = cache.get('materials-page')
+    if (cached) {
+      setMaterials(cached)
+      setLoading(false)
+      return
+    }
+
+    // 2. Jika tidak ada cache, fetch dari API
+    api.get('/materials')
+      .then(r => {
+        cache.set('materials-page', r.data)
+        setMaterials(r.data)
+      })
+      .catch(e => console.error(e))
+      .finally(() => setLoading(false))
   }
 
   useEffect(() => { fetchMaterials() }, [])
@@ -51,15 +68,20 @@ export default function Materials() {
       const data = { ...form, qualitySpecs: JSON.parse(form.qualitySpecs) }
       if (editingId) {
         await api.put(`/materials/${editingId}`, data)
-        toast.success('Material berhasil diupdate') // Toast success update
+        toast.success('Material berhasil diupdate')
       } else {
         await api.post('/materials', data)
-        toast.success('Material berhasil disimpan') // Toast success simpan
+        toast.success('Material berhasil disimpan')
       }
+
+      // Invalidate cache setiap kali ada perubahan data
+      cache.clear('materials-page')
+      cache.clear('dashboard')
+      cache.clear('deliveries-page')
+
       resetForm()
       fetchMaterials()
     } catch (e: any) {
-      // Ganti alert dengan toast.error
       toast.error('Gagal menyimpan', e.response?.data?.message || 'Pastikan Quality Specs format JSON valid')
     } finally { setSaving(false) }
   }
@@ -68,7 +90,13 @@ export default function Materials() {
     if (!confirm(`Hapus material "${name}"?`)) return
     try {
       await api.delete(`/materials/${id}`)
-      toast.success('Material berhasil dihapus') // Toast success hapus
+      
+      // Invalidate cache setiap kali ada penghapusan data
+      cache.clear('materials-page')
+      cache.clear('dashboard')
+      cache.clear('deliveries-page')
+
+      toast.success('Material berhasil dihapus')
       fetchMaterials()
     } catch (e: any) {
       toast.error('Gagal menghapus', e.response?.data?.message || 'Terjadi kesalahan')
@@ -96,68 +124,37 @@ export default function Materials() {
           <form onSubmit={handleSubmit} className="grid grid-cols-2 gap-4">
             <div>
               <label className="block text-xs text-gray-500 mb-1">Kode Material</label>
-              <input 
-                required 
-                value={form.materialCode} 
-                onChange={e => setForm({ ...form, materialCode: e.target.value })}
+              <input required value={form.materialCode} onChange={e => setForm({ ...form, materialCode: e.target.value })}
                 className="w-full border border-gray-200 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
-                placeholder="MAT-001" 
-                disabled={!!editingId} 
-              />
+                placeholder="MAT-001" disabled={!!editingId} />
             </div>
             <div>
               <label className="block text-xs text-gray-500 mb-1">Nama Material</label>
-              <input 
-                required 
-                value={form.name} 
-                onChange={e => setForm({ ...form, name: e.target.value })}
+              <input required value={form.name} onChange={e => setForm({ ...form, name: e.target.value })}
                 className="w-full border border-gray-200 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
-                placeholder="Paracetamol API" 
-              />
+                placeholder="Paracetamol API" />
             </div>
             <div>
               <label className="block text-xs text-gray-500 mb-1">Kategori</label>
-              <input 
-                required 
-                value={form.category} 
-                onChange={e => setForm({ ...form, category: e.target.value })}
+              <input required value={form.category} onChange={e => setForm({ ...form, category: e.target.value })}
                 className="w-full border border-gray-200 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
-                placeholder="Active Pharmaceutical Ingredient" 
-              />
+                placeholder="Active Pharmaceutical Ingredient" />
             </div>
             <div>
               <label className="block text-xs text-gray-500 mb-1">Unit</label>
-              <input 
-                required 
-                value={form.unit} 
-                onChange={e => setForm({ ...form, unit: e.target.value })}
+              <input required value={form.unit} onChange={e => setForm({ ...form, unit: e.target.value })}
                 className="w-full border border-gray-200 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
-                placeholder="kg" 
-              />
+                placeholder="kg" />
             </div>
             <div className="col-span-2">
               <label className="block text-xs text-gray-500 mb-1">Quality Specs (JSON)</label>
-              <textarea 
-                rows={3} 
-                value={form.qualitySpecs} 
-                onChange={e => setForm({ ...form, qualitySpecs: e.target.value })}
-                className="w-full border border-gray-200 rounded-lg px-3 py-2 text-sm font-mono focus:outline-none focus:ring-2 focus:ring-blue-500" 
-              />
+              <textarea rows={3} value={form.qualitySpecs} onChange={e => setForm({ ...form, qualitySpecs: e.target.value })}
+                className="w-full border border-gray-200 rounded-lg px-3 py-2 text-sm font-mono focus:outline-none focus:ring-2 focus:ring-blue-500" />
               <p className="text-xs text-gray-400 mt-1">Specs ini akan dipakai AI untuk validasi CoA</p>
             </div>
             <div className="col-span-2 flex gap-2 justify-end">
-              <button 
-                type="button" 
-                onClick={resetForm} 
-                className="px-4 py-2 text-sm text-gray-600 border border-gray-200 rounded-lg hover:bg-gray-50"
-              >
-                Batal
-              </button>
-              <button 
-                type="submit" 
-                disabled={saving} 
-                className="px-4 py-2 text-sm bg-blue-600 text-white rounded-lg hover:bg-blue-700 disabled:opacity-50"
-              >
+              <button type="button" onClick={resetForm} className="px-4 py-2 text-sm text-gray-600 border border-gray-200 rounded-lg hover:bg-gray-50">Batal</button>
+              <button type="submit" disabled={saving} className="px-4 py-2 text-sm bg-blue-600 text-white rounded-lg hover:bg-blue-700 disabled:opacity-50">
                 {saving ? 'Menyimpan...' : editingId ? 'Update' : 'Simpan'}
               </button>
             </div>
@@ -179,7 +176,8 @@ export default function Materials() {
           </thead>
           <tbody>
             {loading ? (
-              <tr><td colSpan={6} className="text-center py-8 text-gray-400">Memuat...</td></tr>
+              // Menggunakan SkeletonRow sesuai instruksi
+              Array.from({ length: 5 }).map((_, i) => <SkeletonRow key={i} cols={6} />)
             ) : materials.length === 0 ? (
               <tr><td colSpan={6} className="text-center py-8 text-gray-400">Belum ada material</td></tr>
             ) : materials.map(m => (
@@ -191,16 +189,10 @@ export default function Materials() {
                 <td className="px-4 py-3 text-gray-400 text-xs font-mono">{JSON.stringify(m.qualitySpecs).slice(0, 40)}...</td>
                 <td className="px-4 py-3">
                   <div className="flex gap-2">
-                    <button 
-                      onClick={() => openEdit(m)} 
-                      className="text-xs px-3 py-1.5 rounded-lg bg-blue-600 text-white hover:bg-blue-700 font-medium transition-colors"
-                    >
+                    <button onClick={() => openEdit(m)} className="text-xs px-3 py-1.5 rounded-lg bg-blue-600 text-white hover:bg-blue-700 font-medium transition-colors">
                       Edit
                     </button>
-                    <button 
-                      onClick={() => handleDelete(m.id, m.name)} 
-                      className="text-xs px-3 py-1.5 rounded-lg bg-red-600 text-white hover:bg-red-700 font-medium transition-colors"
-                    >
+                    <button onClick={() => handleDelete(m.id, m.name)} className="text-xs px-3 py-1.5 rounded-lg bg-red-600 text-white hover:bg-red-700 font-medium transition-colors">
                       Hapus
                     </button>
                   </div>

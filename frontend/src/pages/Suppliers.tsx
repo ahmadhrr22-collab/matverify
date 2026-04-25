@@ -1,7 +1,9 @@
 import { useEffect, useState } from 'react'
 import Layout from '../components/Layout'
 import api from '../services/api'
-import { toast } from '../components/Toast' // Import toast
+import { toast } from '../components/Toast'
+import { cache } from '../services/cache' // Import cache
+import { SkeletonRow } from '../components/Skeleton' // Import Skeleton
 
 export default function Suppliers() {
   const [suppliers, setSuppliers] = useState<any[]>([])
@@ -14,7 +16,22 @@ export default function Suppliers() {
   })
 
   const fetchSuppliers = () => {
-    api.get('/suppliers').then(r => setSuppliers(r.data)).finally(() => setLoading(false))
+    // 1. Cek data di cache untuk halaman supplier
+    const cached = cache.get('suppliers-page')
+    if (cached) {
+      setSuppliers(cached)
+      setLoading(false)
+      return
+    }
+
+    // 2. Jika tidak ada cache, fetch dari API
+    api.get('/suppliers')
+      .then(r => {
+        cache.set('suppliers-page', r.data)
+        setSuppliers(r.data)
+      })
+      .catch(e => console.error(e))
+      .finally(() => setLoading(false))
   }
 
   useEffect(() => { fetchSuppliers() }, [])
@@ -44,25 +61,35 @@ export default function Suppliers() {
     try {
       if (editingId) {
         await api.put(`/suppliers/${editingId}`, form)
-        toast.success('Supplier berhasil diupdate') // Update sukses
+        toast.success('Supplier berhasil diupdate')
       } else {
         await api.post('/suppliers', form)
-        toast.success('Supplier berhasil disimpan') // Simpan sukses
+        toast.success('Supplier berhasil disimpan')
       }
+
+      // Invalidate cache setiap kali ada perubahan data
+      cache.clear('suppliers-page')
+      cache.clear('dashboard')
+      cache.clear('deliveries-page')
+
       resetForm()
       fetchSuppliers()
     } catch (e: any) {
-      // Ganti alert dengan toast.error
       toast.error('Gagal menyimpan', e.response?.data?.message || 'Terjadi kesalahan pada server')
     } finally { setSaving(false) }
   }
 
   const handleDelete = async (id: string, name: string) => {
-    // Sesuai instruksi: Ganti alert konfirmasi/error dengan toast
     if (!confirm(`Hapus supplier "${name}"?`)) return
     try {
       await api.delete(`/suppliers/${id}`)
-      toast.success('Supplier berhasil dihapus') // Hapus sukses
+      
+      // Invalidate cache setiap kali ada penghapusan data
+      cache.clear('suppliers-page')
+      cache.clear('dashboard')
+      cache.clear('deliveries-page')
+
+      toast.success('Supplier berhasil dihapus')
       fetchSuppliers()
     } catch (e: any) {
       toast.error('Gagal menghapus', e.response?.data?.message || 'Terjadi kesalahan')
@@ -148,7 +175,8 @@ export default function Suppliers() {
           </thead>
           <tbody>
             {loading ? (
-              <tr><td colSpan={6} className="text-center py-8 text-gray-400">Memuat...</td></tr>
+              // Menggunakan SkeletonRow sesuai instruksi
+              Array.from({ length: 5 }).map((_, i) => <SkeletonRow key={i} cols={6} />)
             ) : suppliers.length === 0 ? (
               <tr><td colSpan={6} className="text-center py-8 text-gray-400">Belum ada supplier</td></tr>
             ) : suppliers.map(s => (
