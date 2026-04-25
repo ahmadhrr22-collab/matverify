@@ -1,5 +1,7 @@
 import { Link, useLocation, useNavigate } from 'react-router-dom'
 import { useAuthStore } from '../stores/authStore'
+import { useState } from 'react'
+import ConfirmModal from './ConfirmModal'
 
 const icons = {
   dashboard: (
@@ -63,6 +65,7 @@ export default function Sidebar() {
   const { pathname } = useLocation()
   const { user, logout } = useAuthStore()
   const navigate = useNavigate()
+  const [showLogout, setShowLogout] = useState(false)
 
   const handleLogout = () => {
     logout()
@@ -78,6 +81,7 @@ export default function Sidebar() {
 
   return (
     <div style={{ width: '220px', minHeight: '100vh', background: '#fff', borderRight: '1px solid #f0f0ef', display: 'flex', flexDirection: 'column' }}>
+      {/* Brand Header */}
       <div style={{ padding: '20px 16px 16px', borderBottom: '1px solid #f0f0ef' }}>
         <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
           <div style={{ width: '28px', height: '28px', background: '#1a56db', borderRadius: '7px', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
@@ -94,6 +98,7 @@ export default function Sidebar() {
         </div>
       </div>
 
+      {/* Navigation Menus */}
       <nav style={{ flex: 1, padding: '8px' }}>
         {menus.map((m) => {
           const active = pathname === m.path
@@ -135,6 +140,7 @@ export default function Sidebar() {
         })}
       </nav>
 
+      {/* User Profile & Logout Section */}
       <div style={{ padding: '12px 8px', borderTop: '1px solid #f0f0ef' }}>
         <div style={{ display: 'flex', alignItems: 'center', gap: '10px', padding: '8px 10px', borderRadius: '8px', marginBottom: '4px' }}>
           <div style={{ width: '28px', height: '28px', borderRadius: '50%', background: '#eff4ff', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: '11px', fontWeight: 600, color: '#1a56db', flexShrink: 0 }}>
@@ -145,8 +151,9 @@ export default function Sidebar() {
             <p style={{ margin: 0, fontSize: '11px', color: '#999' }}>{user?.role}</p>
           </div>
         </div>
+
         <button
-          onClick={handleLogout}
+          onClick={() => setShowLogout(true)}
           style={{ width: '100%', display: 'flex', alignItems: 'center', gap: '10px', padding: '7px 10px', borderRadius: '8px', border: 'none', background: 'transparent', cursor: 'pointer', fontSize: '13px', color: '#e53e3e', textAlign: 'left' }}
           onMouseEnter={e => (e.currentTarget.style.background = '#fff5f5')}
           onMouseLeave={e => (e.currentTarget.style.background = 'transparent')}
@@ -158,6 +165,18 @@ export default function Sidebar() {
           Keluar
         </button>
       </div>
+
+      {/* Modal Konfirmasi */}
+      <ConfirmModal
+        isOpen={showLogout}
+        title="Keluar dari MatVerify?"
+        message="Sesi Anda akan diakhiri. Anda perlu login kembali untuk mengakses sistem."
+        confirmLabel="Ya, Keluar"
+        cancelLabel="Batal"
+        confirmColor="#dc2626"
+        onConfirm={handleLogout}
+        onCancel={() => setShowLogout(false)}
+      />
     </div>
   )
 }
