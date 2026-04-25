@@ -2,6 +2,7 @@ import { useEffect, useState } from 'react'
 import { useNavigate } from 'react-router-dom'
 import Layout from '../components/Layout'
 import api from '../services/api'
+import { toast } from '../components/Toast' // Import toast
 
 const statusColor: Record<string, string> = {
   PENDING: 'bg-amber-50 text-amber-700',
@@ -88,10 +89,13 @@ export default function Deliveries() {
       for (const item of delivery.data.items) {
         await api.post('/tasks', { deliveryItemId: item.id, priority: 'MEDIUM' })
       }
+      
+      toast.success('Delivery & Tasks berhasil dibuat') // Toast success sesuai instruksi
       resetForm()
       fetchAll()
     } catch (e: any) {
-      alert(e.response?.data?.message || 'Gagal menyimpan delivery')
+      // Ganti alert dengan toast.error
+      toast.error('Gagal menyimpan delivery', e.response?.data?.message || e.message)
     } finally {
       setSaving(false)
     }
@@ -101,9 +105,11 @@ export default function Deliveries() {
     if (!confirm(`Hapus delivery "${deliveryNo}" beserta semua data verifikasinya?`)) return
     try {
       await api.delete(`/deliveries/${id}`)
+      toast.success('Delivery berhasil dihapus') // Toast success hapus
       fetchAll()
     } catch (e: any) {
-      alert(e.response?.data?.message || 'Gagal menghapus')
+      // Ganti alert dengan toast.error
+      toast.error('Gagal menghapus', e.response?.data?.message || 'Terjadi kesalahan')
     }
   }
 

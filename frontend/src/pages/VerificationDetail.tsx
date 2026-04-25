@@ -2,6 +2,7 @@ import { useEffect, useState } from 'react'
 import { useParams, useNavigate } from 'react-router-dom'
 import Layout from '../components/Layout'
 import api from '../services/api'
+import { toast } from '../components/Toast' // Impor toast di bagian atas
 
 const statusColor: Record<string, string> = {
   PENDING: 'bg-amber-50 text-amber-700',
@@ -45,32 +46,44 @@ export default function VerificationDetail() {
       const res = await api.post(`/documents/upload/${taskId}`, formData, {
         headers: { 'Content-Type': 'multipart/form-data' }
       })
+      
       const v = res.data.geminiValidation
       if (v) {
         const score = v.overallScore ?? v.score ?? 'N/A'
         const status = v.status ?? 'Unknown'
         const summary = v.summary ?? ''
-        alert(`AI Analysis Complete\nScore: ${score}%\nStatus: ${status}\n${summary}`)
+        
+        // Ganti alert dengan toast sesuai instruksi
+        const statusLabel = status === 'PASSED' ? 'success' : status === 'FAILED' ? 'error' : 'warning'
+        toast[statusLabel as 'success' | 'error' | 'warning'](
+          `AI Analysis — ${status}`,
+          `Score: ${score}% · ${summary}`
+        )
       }
       fetchData()
     } catch (e: any) {
-      alert('Upload failed: ' + (e.response?.data?.message || e.message))
+      // Update pesan error upload sesuai instruksi
+      toast.error('Upload gagal', e.response?.data?.message || e.message)
     } finally {
       setUploading(null)
     }
   }
 
   const handleComplete = async (action: 'approve' | 'reject') => {
-    const msg = action === 'approve'
-      ? 'Approve this delivery? All tasks will be marked as APPROVED.'
-      : 'Reject this delivery? All tasks will be marked as REJECTED.'
-    if (!confirm(msg)) return
+    // Sesuai instruksi: Hapus confirm() dan langsung jalankan
     setCompleting(true)
     try {
       await api.patch(`/deliveries/${id}/complete`, { action })
+      
+      // Tampilkan toast setelah selesai
+      toast.success(
+        action === 'approve' ? 'Delivery Approved' : 'Delivery Rejected',
+        action === 'approve' ? 'Semua task telah di-approve' : 'Delivery telah ditolak'
+      )
+      
       fetchData()
     } catch (e: any) {
-      alert(e.response?.data?.message || 'Failed to update status')
+      toast.error('Gagal memproses delivery', e.response?.data?.message || e.message)
     } finally {
       setCompleting(false)
     }
@@ -84,7 +97,6 @@ export default function VerificationDetail() {
 
   return (
     <Layout>
-      {/* Header — only status label, no buttons here */}
       <div className="mb-6 flex items-center justify-between">
         <div className="flex items-center gap-4">
           <button onClick={() => navigate('/deliveries')} className="text-gray-400 hover:text-gray-600 text-sm">← Back</button>
@@ -95,7 +107,6 @@ export default function VerificationDetail() {
             </p>
           </div>
         </div>
-        {/* Only show final status label if already completed/rejected */}
         {(delivery.status === 'COMPLETED' || delivery.status === 'REJECTED') && (
           <span className={`px-3 py-1.5 rounded-lg text-sm font-medium ${
             delivery.status === 'COMPLETED' ? 'bg-green-50 text-green-700' : 'bg-red-50 text-red-700'
@@ -280,28 +291,10 @@ export default function VerificationDetail() {
                 ))}
               </div>
             )}
-
-            {task.nonConformances?.length > 0 && (
-              <div className="border-t border-red-100 pt-4 mt-4">
-                <p className="text-xs font-semibold text-red-500 uppercase tracking-wider mb-2">Non-Conformances</p>
-                {task.nonConformances.map((nc: any) => (
-                  <div key={nc.id} className="bg-red-50 border border-red-100 rounded-lg p-3 mb-2">
-                    <div className="flex justify-between items-center">
-                      <span className="text-xs font-mono text-red-700 font-medium">{nc.ncNumber}</span>
-                      <span className={`text-xs px-2 py-0.5 rounded-full font-medium ${
-                        nc.severity === 'CRITICAL' ? 'bg-red-200 text-red-800' : 'bg-amber-100 text-amber-700'
-                      }`}>{nc.severity}</span>
-                    </div>
-                    <p className="text-xs text-red-600 mt-1">{nc.description}</p>
-                  </div>
-                ))}
-              </div>
-            )}
           </div>
         ))}
       </div>
 
-      {/* Approve/Reject buttons — bottom right, only shown after documents uploaded */}
       {isActionable && (
         <div className="fixed bottom-6 right-6 flex gap-3 z-50">
           <button

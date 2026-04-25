@@ -1,5 +1,6 @@
 import { BrowserRouter, Routes, Route, Navigate } from 'react-router-dom'
 import { useAuthStore } from './stores/authStore'
+import ToastProvider from './components/Toast'
 import Login from './pages/Login'
 import Dashboard from './pages/Dashboard'
 import Suppliers from './pages/Suppliers'
@@ -17,6 +18,7 @@ function PrivateRoute({ children }: { children: React.ReactNode }) {
 export default function App() {
   return (
     <BrowserRouter>
+      <ToastProvider />
       <Routes>
         <Route path="/login" element={<Login />} />
         <Route path="/dashboard" element={<PrivateRoute><Dashboard /></PrivateRoute>} />

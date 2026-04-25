@@ -1,6 +1,7 @@
 import { useEffect, useState } from 'react'
 import Layout from '../components/Layout'
 import api from '../services/api'
+import { toast } from '../components/Toast' // Import toast
 
 export default function Materials() {
   const [materials, setMaterials] = useState<any[]>([])
@@ -50,13 +51,16 @@ export default function Materials() {
       const data = { ...form, qualitySpecs: JSON.parse(form.qualitySpecs) }
       if (editingId) {
         await api.put(`/materials/${editingId}`, data)
+        toast.success('Material berhasil diupdate') // Update sukses
       } else {
         await api.post('/materials', data)
+        toast.success('Material berhasil disimpan') // Simpan sukses
       }
       resetForm()
       fetchMaterials()
     } catch (e: any) {
-      alert(e.response?.data?.message || 'Gagal menyimpan — pastikan Quality Specs format JSON valid')
+      // Ganti alert dengan toast.error
+      toast.error('Gagal menyimpan', e.response?.data?.message || 'Pastikan Quality Specs format JSON valid')
     } finally { setSaving(false) }
   }
 
@@ -64,9 +68,11 @@ export default function Materials() {
     if (!confirm(`Hapus material "${name}"?`)) return
     try {
       await api.delete(`/materials/${id}`)
+      toast.success('Material berhasil dihapus') // Hapus sukses
       fetchMaterials()
     } catch (e: any) {
-      alert(e.response?.data?.message || 'Gagal menghapus')
+      // Ganti alert dengan toast.error
+      toast.error('Gagal menghapus', e.response?.data?.message || 'Terjadi kesalahan')
     }
   }
 

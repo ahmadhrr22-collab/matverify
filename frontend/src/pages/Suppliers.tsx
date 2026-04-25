@@ -1,6 +1,7 @@
 import { useEffect, useState } from 'react'
 import Layout from '../components/Layout'
 import api from '../services/api'
+import { toast } from '../components/Toast' // Import toast
 
 export default function Suppliers() {
   const [suppliers, setSuppliers] = useState<any[]>([])
@@ -43,13 +44,16 @@ export default function Suppliers() {
     try {
       if (editingId) {
         await api.put(`/suppliers/${editingId}`, form)
+        toast.success('Supplier berhasil diupdate') // Update sukses
       } else {
         await api.post('/suppliers', form)
+        toast.success('Supplier berhasil disimpan') // Simpan sukses
       }
       resetForm()
       fetchSuppliers()
     } catch (e: any) {
-      alert(e.response?.data?.message || 'Gagal menyimpan')
+      // Ganti alert dengan toast.error
+      toast.error('Gagal menyimpan', e.response?.data?.message || 'Terjadi kesalahan pada server')
     } finally { setSaving(false) }
   }
 
@@ -57,9 +61,11 @@ export default function Suppliers() {
     if (!confirm(`Hapus supplier "${name}"?`)) return
     try {
       await api.delete(`/suppliers/${id}`)
+      toast.success('Supplier berhasil dihapus') // Hapus sukses
       fetchSuppliers()
     } catch (e: any) {
-      alert(e.response?.data?.message || 'Gagal menghapus')
+      // Ganti alert dengan toast.error
+      toast.error('Gagal menghapus', e.response?.data?.message || 'Terjadi kesalahan')
     }
   }
 
