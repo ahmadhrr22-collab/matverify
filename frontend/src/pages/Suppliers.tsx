@@ -4,6 +4,7 @@ import api from '../services/api'
 import { toast } from '../components/Toast'
 import { cache } from '../services/cache' // Import cache
 import { SkeletonRow } from '../components/Skeleton' // Import Skeleton
+import ConfirmModal from '../components/ConfirmModal' // Import ConfirmModal
 
 export default function Suppliers() {
   const [suppliers, setSuppliers] = useState<any[]>([])
@@ -15,8 +16,11 @@ export default function Suppliers() {
     supplierCode: '', supplierName: '', certNumber: '', email: '', phone: '', status: 'ACTIVE'
   })
 
+  // State untuk target penghapusan (ConfirmModal)
+  const [deleteTarget, setDeleteTarget] = useState<{ id: string; label: string } | null>(null)
+
   const fetchSuppliers = () => {
-    // 1. Cek data di cache untuk halaman supplier
+    // 1. Cek data di cache
     const cached = cache.get('suppliers-page')
     if (cached) {
       setSuppliers(cached)
@@ -79,12 +83,13 @@ export default function Suppliers() {
     } finally { setSaving(false) }
   }
 
-  const handleDelete = async (id: string, name: string) => {
-    if (!confirm(`Hapus supplier "${name}"?`)) return
+  // Fungsi handleDelete yang diperbarui menggunakan modal kustom
+  const handleDelete = async () => {
+    if (!deleteTarget) return
     try {
-      await api.delete(`/suppliers/${id}`)
+      await api.delete(`/suppliers/${deleteTarget.id}`)
       
-      // Invalidate cache setiap kali ada penghapusan data
+      // Invalidate cache
       cache.clear('suppliers-page')
       cache.clear('dashboard')
       cache.clear('deliveries-page')
@@ -93,6 +98,8 @@ export default function Suppliers() {
       fetchSuppliers()
     } catch (e: any) {
       toast.error('Gagal menghapus', e.response?.data?.message || 'Terjadi kesalahan')
+    } finally {
+      setDeleteTarget(null)
     }
   }
 
@@ -175,7 +182,6 @@ export default function Suppliers() {
           </thead>
           <tbody>
             {loading ? (
-              // Menggunakan SkeletonRow sesuai instruksi
               Array.from({ length: 5 }).map((_, i) => <SkeletonRow key={i} cols={6} />)
             ) : suppliers.length === 0 ? (
               <tr><td colSpan={6} className="text-center py-8 text-gray-400">Belum ada supplier</td></tr>
@@ -195,7 +201,7 @@ export default function Suppliers() {
                     <button onClick={() => openEdit(s)} className="text-xs px-3 py-1.5 rounded-lg bg-blue-600 text-white hover:bg-blue-700 font-medium transition-colors">
                       Edit
                     </button>
-                    <button onClick={() => handleDelete(s.id, s.supplierName)} className="text-xs px-3 py-1.5 rounded-lg bg-red-600 text-white hover:bg-red-700 font-medium transition-colors">
+                    <button onClick={() => setDeleteTarget({ id: s.id, label: s.supplierName })} className="text-xs px-3 py-1.5 rounded-lg bg-red-600 text-white hover:bg-red-700 font-medium transition-colors">
                       Hapus
                     </button>
                   </div>
@@ -205,6 +211,17 @@ export default function Suppliers() {
           </tbody>
         </table>
       </div>
+
+      <ConfirmModal
+        isOpen={!!deleteTarget}
+        title="Hapus Supplier?"
+        message={`Supplier "${deleteTarget?.label}" akan dihapus permanen. Pastikan tidak ada Purchase Order aktif yang terhubung.`}
+        confirmLabel="Ya, Hapus"
+        cancelLabel="Batal"
+        confirmColor="#dc2626"
+        onConfirm={handleDelete}
+        onCancel={() => setDeleteTarget(null)}
+      />
     </Layout>
   )
 }

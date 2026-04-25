@@ -5,6 +5,7 @@ import api from '../services/api'
 import { toast } from '../components/Toast'
 import { cache } from '../services/cache' // Import cache
 import { SkeletonRow } from '../components/Skeleton' // Import Skeleton
+import ConfirmModal from '../components/ConfirmModal' // Import ConfirmModal
 
 const statusColor: Record<string, string> = {
   PENDING: 'bg-amber-50 text-amber-700',
@@ -21,6 +22,9 @@ export default function Deliveries() {
   const [showForm, setShowForm] = useState(false)
   const [saving, setSaving] = useState(false)
   const navigate = useNavigate()
+
+  // State untuk target penghapusan (ConfirmModal)
+  const [deleteTarget, setDeleteTarget] = useState<{ id: string; label: string } | null>(null)
 
   const [form, setForm] = useState({
     deliveryNo: '', supplierId: '', poNumber: '', poDate: '', arrivalDate: '', notes: ''
@@ -121,10 +125,11 @@ export default function Deliveries() {
     }
   }
 
-  const handleDelete = async (id: string, deliveryNo: string) => {
-    if (!confirm(`Hapus delivery "${deliveryNo}" beserta semua data verifikasinya?`)) return
+  // Fungsi handleDelete yang diperbarui menggunakan modal kustom
+  const handleDelete = async () => {
+    if (!deleteTarget) return
     try {
-      await api.delete(`/deliveries/${id}`)
+      await api.delete(`/deliveries/${deleteTarget.id}`)
       
       // Invalidate cache
       cache.clear('deliveries-page')
@@ -134,6 +139,8 @@ export default function Deliveries() {
       fetchAll()
     } catch (e: any) {
       toast.error('Gagal menghapus', e.response?.data?.message || 'Terjadi kesalahan')
+    } finally {
+      setDeleteTarget(null)
     }
   }
 
@@ -336,7 +343,6 @@ export default function Deliveries() {
           </thead>
           <tbody>
             {loading ? (
-              // Menggunakan SkeletonRow sesuai instruksi
               Array.from({ length: 5 }).map((_, i) => <SkeletonRow key={i} cols={6} />)
             ) : deliveries.length === 0 ? (
               <tr><td colSpan={6} className="text-center py-8 text-gray-400">Belum ada delivery</td></tr>
@@ -360,7 +366,7 @@ export default function Deliveries() {
                       Verifikasi
                     </button>
                     <button
-                      onClick={() => handleDelete(d.id, d.deliveryNo)}
+                      onClick={() => setDeleteTarget({ id: d.id, label: d.deliveryNo })}
                       className="text-xs px-3 py-1.5 rounded-lg bg-red-600 text-white hover:bg-red-700 font-medium transition-colors"
                     >
                       Hapus
@@ -372,6 +378,17 @@ export default function Deliveries() {
           </tbody>
         </table>
       </div>
+
+      <ConfirmModal
+        isOpen={!!deleteTarget}
+        title="Hapus Delivery?"
+        message={`Delivery "${deleteTarget?.label}" dan semua data verifikasinya akan dihapus permanen. Tindakan ini tidak dapat dibatalkan.`}
+        confirmLabel="Ya, Hapus"
+        cancelLabel="Batal"
+        confirmColor="#dc2626"
+        onConfirm={handleDelete}
+        onCancel={() => setDeleteTarget(null)}
+      />
     </Layout>
   )
 }

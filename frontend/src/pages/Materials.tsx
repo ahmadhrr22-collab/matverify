@@ -4,6 +4,7 @@ import api from '../services/api'
 import { toast } from '../components/Toast'
 import { cache } from '../services/cache' // Import cache
 import { SkeletonRow } from '../components/Skeleton' // Import Skeleton
+import ConfirmModal from '../components/ConfirmModal' // Import ConfirmModal
 
 export default function Materials() {
   const [materials, setMaterials] = useState<any[]>([])
@@ -15,6 +16,9 @@ export default function Materials() {
     materialCode: '', name: '', category: '', unit: '',
     qualitySpecs: '{"purity":"min 99%","moisture":"max 0.5%","heavy_metals":"max 10ppm"}'
   })
+
+  // State untuk target penghapusan (ConfirmModal)
+  const [deleteTarget, setDeleteTarget] = useState<{ id: string; label: string } | null>(null)
 
   const fetchMaterials = () => {
     // 1. Cek data di cache untuk halaman materials
@@ -86,10 +90,11 @@ export default function Materials() {
     } finally { setSaving(false) }
   }
 
-  const handleDelete = async (id: string, name: string) => {
-    if (!confirm(`Hapus material "${name}"?`)) return
+  // Fungsi handleDelete yang diperbarui menggunakan modal kustom
+  const handleDelete = async () => {
+    if (!deleteTarget) return
     try {
-      await api.delete(`/materials/${id}`)
+      await api.delete(`/materials/${deleteTarget.id}`)
       
       // Invalidate cache setiap kali ada penghapusan data
       cache.clear('materials-page')
@@ -100,6 +105,8 @@ export default function Materials() {
       fetchMaterials()
     } catch (e: any) {
       toast.error('Gagal menghapus', e.response?.data?.message || 'Terjadi kesalahan')
+    } finally {
+      setDeleteTarget(null)
     }
   }
 
@@ -176,7 +183,6 @@ export default function Materials() {
           </thead>
           <tbody>
             {loading ? (
-              // Menggunakan SkeletonRow sesuai instruksi
               Array.from({ length: 5 }).map((_, i) => <SkeletonRow key={i} cols={6} />)
             ) : materials.length === 0 ? (
               <tr><td colSpan={6} className="text-center py-8 text-gray-400">Belum ada material</td></tr>
@@ -192,7 +198,7 @@ export default function Materials() {
                     <button onClick={() => openEdit(m)} className="text-xs px-3 py-1.5 rounded-lg bg-blue-600 text-white hover:bg-blue-700 font-medium transition-colors">
                       Edit
                     </button>
-                    <button onClick={() => handleDelete(m.id, m.name)} className="text-xs px-3 py-1.5 rounded-lg bg-red-600 text-white hover:bg-red-700 font-medium transition-colors">
+                    <button onClick={() => setDeleteTarget({ id: m.id, label: m.name })} className="text-xs px-3 py-1.5 rounded-lg bg-red-600 text-white hover:bg-red-700 font-medium transition-colors">
                       Hapus
                     </button>
                   </div>
@@ -202,6 +208,17 @@ export default function Materials() {
           </tbody>
         </table>
       </div>
+
+      <ConfirmModal
+        isOpen={!!deleteTarget}
+        title="Hapus Material?"
+        message={`Material "${deleteTarget?.label}" akan dihapus permanen dari master data.`}
+        confirmLabel="Ya, Hapus"
+        cancelLabel="Batal"
+        confirmColor="#dc2626"
+        onConfirm={handleDelete}
+        onCancel={() => setDeleteTarget(null)}
+      />
     </Layout>
   )
 }
