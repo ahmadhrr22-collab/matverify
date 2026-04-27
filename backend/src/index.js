@@ -12,6 +12,7 @@ const poRoutes = require('./routes/purchaseOrders');
 const taskRoutes = require('./routes/verificationTasks');
 const ncRoutes = require('./routes/nonConformances');
 const fieldMappingRoutes = require('./routes/fieldMappings');
+const adminRoutes = require('./routes/admin');
 
 // 2. Inisialisasi App (WAJIB DI SINI)
 const app = express();
@@ -48,6 +49,7 @@ app.use('/api/purchase-orders', poRoutes);
 app.use('/api/tasks', taskRoutes);
 app.use('/api/non-conformances', ncRoutes);
 app.use('/api/field-mappings', fieldMappingRoutes);
+app.use('/api/admin', adminRoutes);
 
 // 6. Export untuk Vercel
 module.exports = app;
