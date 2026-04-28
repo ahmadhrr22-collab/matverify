@@ -54,12 +54,12 @@ npm run dev
 npm run dev
 
 Skenario Demo
-# Approval: Menunjukkan bagaimana AI memproses dokumen yang valid dalam hitungan detik.
-# Rejected: Menunjukkan deteksi otomatis terhadap parameter yang tidak sesuai standar.
-# Manual Review: Menunjukkan penanganan sistem terhadap data dokumen yang kurang jelas demi menjaga akurasi tinggi.
+-**Approval: Menunjukkan bagaimana AI memproses dokumen yang valid dalam hitungan detik.**
+-**Rejected: Menunjukkan deteksi otomatis terhadap parameter yang tidak sesuai standar.**
+-**Manual Review: Menunjukkan penanganan sistem terhadap data dokumen yang kurang jelas demi menjaga akurasi tinggi.**
 
 Author
-# Ahmad Hariri - Physics Undergraduate at IPB University.
-# Specialized in Computational Physics & Machine Learning.
+-**Ahmad Hariri - Physics Undergraduate at IPB University.**
+-**Specialized in Computational Physics & Machine Learning.**
 
 Proyek ini dikembangkan sebagai solusi inovatif untuk otomasi industri farmasi masa depan.
