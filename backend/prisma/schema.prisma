@@ -1,0 +1,220 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+enum Role {
+  ADMIN
+  QC_MANAGER
+  QC_STAFF
+  WAREHOUSE_STAFF
+}
+
+enum SupplierStatus {
+  ACTIVE
+  INACTIVE
+  SUSPENDED
+}
+
+enum DeliveryStatus {
+  PENDING
+  IN_PROGRESS
+  COMPLETED
+  REJECTED
+}
+
+enum TaskStatus {
+  PENDING
+  IN_REVIEW
+  APPROVED
+  REJECTED
+}
+
+enum TaskPriority {
+  LOW
+  MEDIUM
+  HIGH
+  CRITICAL
+}
+
+enum DocType {
+  COA
+  LABEL
+  DELIVERY_NOTE
+  MSDS
+  OTHER
+}
+
+enum ValidationStatus {
+  PENDING
+  PASSED
+  FAILED
+  MANUAL_REVIEW
+}
+
+enum NCSeverity {
+  MINOR
+  MAJOR
+  CRITICAL
+}
+
+enum NCStatus {
+  OPEN
+  IN_PROGRESS
+  RESOLVED
+  CLOSED
+}
+
+model User {
+  id         String   @id @default(uuid())
+  name       String
+  email      String   @unique
+  password   String
+  role       Role     @default(QC_STAFF)
+  department String?
+  createdAt  DateTime @default(now())
+  updatedAt  DateTime @updatedAt
+
+  purchaseOrders     PurchaseOrder[]
+  verificationTasks  VerificationTask[]
+  receivedDeliveries Delivery[]
+}
+
+model Supplier {
+  id           String         @id @default(uuid())
+  supplierCode String         @unique
+  supplierName String
+  certNumber   String?
+  email        String?
+  phone        String?
+  address      String?
+  status       SupplierStatus @default(ACTIVE)
+  createdAt    DateTime       @default(now())
+  updatedAt    DateTime       @updatedAt
+
+  purchaseOrders PurchaseOrder[]
+  fieldMappings  SupplierFieldMapping[]
+}
+
+model Material {
+  id           String   @id @default(uuid())
+  materialCode String   @unique
+  name         String
+  category     String
+  unit         String
+  qualitySpecs Json
+  createdAt    DateTime @default(now())
+  updatedAt    DateTime @updatedAt
+
+  deliveryItems DeliveryItem[]
+}
+
+model PurchaseOrder {
+  id          String   @id @default(uuid())
+  poNumber    String   @unique
+  supplierId  String
+  createdById String
+  poDate      DateTime
+  notes       String?
+  status      String   @default("OPEN")
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  supplier   Supplier   @relation(fields: [supplierId], references: [id])
+  createdBy  User       @relation(fields: [createdById], references: [id])
+  deliveries Delivery[]
+}
+
+model Delivery {
+  id           String         @id @default(uuid())
+  deliveryNo   String         @unique
+  poId         String
+  receivedById String
+  arrivalDate  DateTime
+  status       DeliveryStatus @default(PENDING)
+  notes        String?
+  createdAt    DateTime       @default(now())
+  updatedAt    DateTime       @updatedAt
+
+  purchaseOrder PurchaseOrder  @relation(fields: [poId], references: [id])
+  receivedBy    User           @relation(fields: [receivedById], references: [id])
+  items         DeliveryItem[]
+}
+
+model DeliveryItem {
+  id          String   @id @default(uuid())
+  deliveryId  String
+  materialId  String
+  qtyOrdered  Float
+  qtyReceived Float
+  batchNo     String
+  expiryDate  DateTime
+  createdAt   DateTime @default(now())
+
+  delivery          Delivery           @relation(fields: [deliveryId], references: [id])
+  material          Material           @relation(fields: [materialId], references: [id])
+  verificationTasks VerificationTask[]
+}
+
+model VerificationTask {
+  id             String       @id @default(uuid())
+  deliveryItemId String
+  assignedToId   String
+  status         TaskStatus   @default(PENDING)
+  priority       TaskPriority @default(MEDIUM)
+  notes          String?
+  completedAt    DateTime?
+  createdAt      DateTime     @default(now())
+  updatedAt      DateTime     @updatedAt
+
+  deliveryItem    DeliveryItem     @relation(fields: [deliveryItemId], references: [id])
+  assignedTo      User             @relation(fields: [assignedToId], references: [id])
+  documents       Document[]
+  nonConformances NonConformance[]
+}
+
+model Document {
+  id               String           @id @default(uuid())
+  taskId           String
+  docType          DocType
+  fileUrl          String
+  fileName         String
+  extractedData    Json?
+  confidence       Float?
+  validationStatus ValidationStatus @default(PENDING)
+  validationDetail Json?
+  createdAt        DateTime         @default(now())
+
+  task VerificationTask @relation(fields: [taskId], references: [id])
+}
+
+model NonConformance {
+  id          String     @id @default(uuid())
+  taskId      String
+  ncNumber    String     @unique
+  severity    NCSeverity
+  description String
+  rootCause   String?
+  action      String?
+  status      NCStatus   @default(OPEN)
+  resolvedAt  DateTime?
+  createdAt   DateTime   @default(now())
+  updatedAt   DateTime   @updatedAt
+
+  task VerificationTask @relation(fields: [taskId], references: [id])
+}
+
+model SupplierFieldMapping {
+  id            String   @id @default(uuid())
+  supplierId    String
+  externalField String
+  internalField String
+  createdAt     DateTime @default(now())
+  updatedAt     DateTime @updatedAt
+
+  supplier Supplier @relation(fields: [supplierId], references: [id])
+}
