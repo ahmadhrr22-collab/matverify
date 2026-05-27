@@ -1,8 +1,5 @@
 # MatVerify | AI Material Verification Intelligence
 
-<img width="1919" height="953" alt="image" src="https://github.com/user-attachments/assets/dea6407a-866f-4727-816f-5c06aeec136d" />
-
-<img width="1919" height="950" alt="image" src="https://github.com/user-attachments/assets/43470a5f-a5b5-448a-9be8-02a22e907992" />
 
 **MatVerify** adalah sistem otomasi berbasis kecerdasan buatan yang dirancang untuk memverifikasi dokumen *Certificate of Analysis* (CoA) bahan baku farmasi secara instan. Dengan mengintegrasikan Azure AI, sistem ini membantu memastikan setiap material yang masuk ke jalur produksi memenuhi standar kualitas yang ketat, meminimalisir *human error*, dan mempercepat proses Quality Control (QC).
 
