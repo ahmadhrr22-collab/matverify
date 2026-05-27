@@ -21,8 +21,10 @@ export default function Login() {
       const res = await api.post('/auth/login', { email, password })
       login(res.data.token, res.data.user)
       navigate('/dashboard')
-    } catch {
-      setError('Email atau password tidak sesuai')
+    } catch (err: any) {
+      console.error('Login error:', err)
+      const errMsg = err.response?.data?.message || err.message || 'Koneksi ke server gagal'
+      setError(errMsg)
     } finally {
       setLoading(false)
     }
