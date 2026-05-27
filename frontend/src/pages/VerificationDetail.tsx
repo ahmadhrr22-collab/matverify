@@ -297,9 +297,11 @@ export default function VerificationDetail() {
                                 <div className="md:col-span-3">
                                   <span className="text-[8px] text-slate-400 font-bold uppercase tracking-wider block md:hidden mb-0.5">Extracted Value</span>
                                   <span className={`inline-flex font-mono text-[11px] font-extrabold px-2.5 py-1 rounded-lg border ${
-                                    r.passed 
-                                      ? 'bg-emerald-50/40 border-emerald-100/50 text-emerald-700' 
-                                      : 'bg-rose-50/40 border-rose-100/50 text-rose-700'
+                                    !r.extractedValue
+                                      ? 'bg-rose-50/40 border-rose-100/50 text-rose-700'
+                                      : r.passed 
+                                        ? 'bg-emerald-50/40 border-emerald-100/50 text-emerald-700' 
+                                        : 'bg-rose-50/40 border-rose-100/50 text-rose-700'
                                   }`}>
                                     {r.extractedValue || 'Not found'}
                                   </span>
