@@ -20,24 +20,10 @@ export const toast = {
 }
 
 const icons = {
-  success: <CheckCircle2 size={18} className="text-emerald-500 stroke-[2.5]" />,
-  error: <AlertCircle size={18} className="text-rose-500 stroke-[2.5]" />,
-  warning: <AlertTriangle size={18} className="text-amber-500 stroke-[2.5]" />,
-  info: <Info size={18} className="text-slate-600 stroke-[2.5]" />,
-}
-
-const accentColors = {
-  success: '#10b981',
-  error: '#f43f5e',
-  warning: '#f59e0b',
-  info: '#3b82f6',
-}
-
-const iconBgs = {
-  success: 'bg-emerald-50 border-emerald-100/50',
-  error: 'bg-rose-50 border-rose-100/50',
-  warning: 'bg-amber-50 border-amber-100/50',
-  info: 'bg-slate-100 border-slate-200/60/50',
+  success: <CheckCircle2 size={16} className="text-emerald-400 stroke-[2.5]" />,
+  error: <AlertCircle size={16} className="text-rose-400 stroke-[2.5]" />,
+  warning: <AlertTriangle size={16} className="text-amber-400 stroke-[2.5]" />,
+  info: <Info size={16} className="text-slate-400 stroke-[2.5]" />,
 }
 
 function ToastItem({ toast, onRemove }: { toast: Toast; onRemove: () => void }) {
@@ -49,7 +35,7 @@ function ToastItem({ toast, onRemove }: { toast: Toast; onRemove: () => void }) 
     const timer = setTimeout(() => {
       setLeaving(true)
       setTimeout(onRemove, 300)
-    }, 5000) 
+    }, 4500) 
     return () => clearTimeout(timer)
   }, [])
 
@@ -60,25 +46,24 @@ function ToastItem({ toast, onRemove }: { toast: Toast; onRemove: () => void }) 
 
   return (
     <div 
-      className="flex items-start gap-3 bg-white/95 backdrop-blur-md border border-slate-100/80 rounded-2xl p-4 shadow-xl pointer-events-auto transition-all duration-300 min-w-[300px] max-w-[380px]"
+      className="flex items-center gap-3 bg-slate-950/95 backdrop-blur-md border border-slate-800/80 rounded-2xl px-4 py-3 shadow-2xl pointer-events-auto transition-all duration-300 min-w-[280px] max-w-[360px]"
       style={{
-        borderLeft: `4px solid ${accentColors[toast.type]}`,
-        transform: visible && !leaving ? 'translateX(0) scale(1)' : 'translateX(40px) scale(0.95)',
+        transform: visible && !leaving ? 'translateY(0) scale(1)' : 'translateY(20px) scale(0.95)',
         opacity: visible && !leaving ? 1 : 0,
       }}
     >
-      {/* Icon with soft background bubble */}
-      <div className={`w-8 h-8 rounded-lg flex items-center justify-center flex-shrink-0 border ${iconBgs[toast.type]}`}>
+      {/* Icon */}
+      <div className="flex-shrink-0">
         {icons[toast.type]}
       </div>
       
       {/* Text Content */}
-      <div className="flex-1 min-w-0">
-        <p className="text-xs font-extrabold text-slate-800 uppercase tracking-wider font-heading leading-tight">
+      <div className="flex-1 min-w-0 pr-1">
+        <p className="text-xs font-bold text-slate-100 tracking-tight leading-tight">
           {toast.title}
         </p>
         {toast.message && (
-          <p className="text-[11px] text-slate-500 font-medium leading-relaxed mt-1 font-sans">
+          <p className="text-[10px] text-slate-400 font-medium leading-tight mt-0.5 font-sans">
             {toast.message}
           </p>
         )}
@@ -87,9 +72,9 @@ function ToastItem({ toast, onRemove }: { toast: Toast; onRemove: () => void }) 
       {/* Close Button */}
       <button
         onClick={handleClose}
-        className="flex-shrink-0 text-slate-400 hover:text-slate-600 hover:bg-slate-50 p-1 rounded-lg transition-all cursor-pointer"
+        className="flex-shrink-0 text-slate-500 hover:text-slate-300 hover:bg-white/5 p-1 rounded-lg transition-all cursor-pointer"
       >
-        <X size={14} />
+        <X size={13} />
       </button>
     </div>
   )
@@ -107,7 +92,7 @@ export default function ToastProvider() {
   }, [])
 
   return (
-    <div className="fixed top-6 right-6 z-[100000] flex flex-col gap-3 pointer-events-none">
+    <div className="fixed bottom-6 right-6 z-[100000] flex flex-col-reverse gap-2.5 pointer-events-none">
       {toasts.map(t => (
         <ToastItem
           key={t.id}
